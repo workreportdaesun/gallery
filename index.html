@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>작업 사진 관리</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d1117; --sf: #161b22; --sf2: #1c2128;
+  --bd: #30363d; --bd2: #21262d;
+  --ac: #2f81f7; --ac2: #58a6ff;
+  --tx: #e6edf3; --tx2: #8b949e; --tx3: #484f58;
+  --green: #3fb950; --red: #f85149;
+  --purple: #a371f7; --orange: #f0883e;
+  --sb-w: 224px;
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--bg); color: var(--tx); display: flex; flex-direction: column; }
+
+/* 헤더 */
+.hdr { background: var(--sf); border-bottom: 1px solid var(--bd); height: 50px; padding: 0 16px 0 0; display: flex; align-items: center; gap: 0; flex-shrink: 0; z-index: 10; }
+.hdr-logo { width: var(--sb-w); display: flex; align-items: center; gap: 8px; padding: 0 14px; border-right: 1px solid var(--bd); height: 100%; flex-shrink: 0; }
+.hdr-logo-icon { width: 26px; height: 26px; border-radius: 6px; display: block; }
+.hdr-logo-txt { font-size: 0.88rem; font-weight: 700; white-space: nowrap; }
+.hdr-right { flex: 1; display: flex; align-items: center; padding: 0 14px; gap: 8px; }
+.hdr-crumb { font-size: 0.82rem; color: var(--tx2); display: flex; align-items: center; gap: 5px; }
+.hdr-crumb .cc { color: var(--tx); font-weight: 600; }
+.hdr-crumb .cs { color: var(--tx3); font-size: 0.75rem; }
+.spacer { flex: 1; }
+.btn { border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; padding: 5px 13px; font-family: inherit; height: 30px; white-space: nowrap; }
+.btn-primary { background: var(--ac); color: #fff; }
+.btn-primary:hover { background: var(--ac2); }
+.btn-ghost  { background: transparent; border: 1px solid var(--bd); color: var(--tx2); }
+.btn-ghost:hover  { border-color: var(--tx2); color: var(--tx); }
+.btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
+
+/* 상위 메뉴 */
+.menu-tabs { display: flex; gap: 6px; background: var(--sf); border-bottom: 1px solid var(--bd); padding: 8px 14px; flex-shrink: 0; }
+.menu-tab { flex: 0 0 auto; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--bd); background: var(--bg); color: var(--tx2); font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.menu-tab.active { background: var(--ac); border-color: var(--ac); color: #fff; }
+.menu-tab[data-menu="자재"] { border-color: rgba(160,112,58,.45); color: #C9986B; }
+.menu-tab[data-menu="안전"] { border-color: rgba(243,156,18,.45); color: #F5B041; }
+.menu-tab[data-menu="품질"] { border-color: rgba(39,174,96,.45); color: #58D68D; }
+.menu-tab[data-menu="화기/유도"] { border-color: rgba(192,57,43,.45); color: #EC7063; }
+.menu-tab.active[data-menu="자재"] { background: #A0703A; border-color: #A0703A; color: #fff; }
+.menu-tab.active[data-menu="안전"] { background: #F39C12; border-color: #F39C12; color: #fff; }
+.menu-tab.active[data-menu="품질"] { background: #27AE60; border-color: #27AE60; color: #fff; }
+.menu-tab.active[data-menu="화기/유도"] { background: #C0392B; border-color: #C0392B; color: #fff; }
+
+/* 레이아웃 */
+.app-body { flex: 1; display: flex; overflow: hidden; }
+
+/* 사이드바 */
+.sidebar { width: var(--sb-w); flex-shrink: 0; background: var(--sf); border-right: 1px solid var(--bd); display: flex; flex-direction: column; overflow: hidden; }
+.sb-top { padding: 10px 8px 6px; flex-shrink: 0; }
+.sb-all { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; color: var(--tx2); transition: background .12s, color .12s; }
+.sb-all:hover { background: rgba(255,255,255,0.05); color: var(--tx); }
+.sb-all.sel   { background: rgba(47,129,247,0.12); color: var(--ac2); }
+.sb-sep { height: 1px; background: var(--bd2); margin: 6px 8px; }
+.sb-section-lbl { font-size: 0.62rem; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; padding: 0 10px 4px; }
+.sb-list { flex: 1; overflow-y: auto; padding: 0 8px 12px; }
+.sb-list::-webkit-scrollbar { width: 4px; }
+.sb-list::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 2px; }
+.sb-list::-webkit-scrollbar-track { background: transparent; }
+
+.sb-cat { display: flex; align-items: center; gap: 5px; padding: 5px 7px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; color: var(--tx2); transition: background .1s, color .1s; margin-bottom: 1px; }
+.sb-cat:hover { background: rgba(255,255,255,0.05); color: var(--tx); }
+.sb-cat.sel   { background: rgba(47,129,247,0.12); color: var(--ac2); }
+.sb-cat-ico { font-size: 0.9rem; flex-shrink: 0; }
+.sb-cat-nm  { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; }
+.sb-cnt { font-size: 0.62rem; color: var(--tx3); background: var(--bg); border-radius: 8px; padding: 1px 5px; min-width: 16px; text-align: center; flex-shrink: 0; }
+.sb-cnt.has { color: var(--ac2); background: rgba(47,129,247,0.1); }
+.sb-wt-group { margin-bottom: 3px; }
+.sb-caret { font-size: 0.6rem; color: var(--tx3); margin-left: 4px; flex-shrink: 0; }
+.sb-cat-dropdown { width: 100%; margin: 3px 0 6px; background: var(--bg); border: 1px solid var(--bd);
+  border-radius: 5px; color: var(--tx); font-size: 0.75rem; padding: 5px 7px; font-family: inherit; }
+.sb-cat-dropdown:focus { outline: none; border-color: var(--ac); }
+
+
+/* 컨텐츠 영역 */
+.content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* 필터바 */
+.filterbar { background: var(--sf); border-bottom: 1px solid var(--bd); padding: 7px 14px; display: flex; align-items: center; gap: 7px; flex-shrink: 0; flex-wrap: wrap; }
+.filterbar input, .filterbar select { background: var(--bg); border: 1px solid var(--bd); border-radius: 5px; color: var(--tx); font-size: 0.77rem; height: 28px; padding: 0 8px; font-family: inherit; }
+.filterbar input { width: 140px; }
+.filterbar select { width: 110px; }
+#fDate { width: 130px; }
+.filterbar input:focus, .filterbar select:focus { outline: none; border-color: var(--ac); }
+.f-sep { width: 1px; height: 20px; background: var(--bd); margin: 0 2px; }
+.f-reset { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 0.74rem; padding: 3px 6px; border-radius: 4px; font-family: inherit; }
+.f-reset:hover { color: var(--tx2); background: rgba(255,255,255,0.05); }
+.f-count { font-size: 0.72rem; color: var(--tx3); margin-left: 2px; white-space: nowrap; }
+
+/* 스크롤 & 그리드 */
+.scroll { flex: 1; overflow-y: auto; }
+.scroll::-webkit-scrollbar { width: 6px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 3px; }
+#viewContent { padding: 16px 16px 24px; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.photo-card { position: relative; background: var(--sf2); border: 1px solid var(--bd2); border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color .15s, transform .1s; }
+.photo-card:hover { border-color: var(--bd); transform: translateY(-1px); }
+.pc-dl-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.58); border: none; border-radius: 5px; color: #fff; font-size: 0.78rem; padding: 3px 7px; cursor: pointer; opacity: 0; transition: opacity .15s; z-index: 1; line-height: 1.4; }
+.photo-card:hover .pc-dl-btn { opacity: 1; }
+.pc-dl-btn:hover { background: rgba(47,129,247,0.8); }
+/* 선택 모드 */
+.pc-cb { position: absolute; top: 7px; left: 7px; width: 17px; height: 17px; accent-color: var(--ac); cursor: pointer; display: none; z-index: 2; }
+.sel-mode .pc-cb { display: block; }
+.sel-mode .pc-dl-btn { display: none; }
+.photo-card.selected { border-color: var(--ac); box-shadow: 0 0 0 2px rgba(47,129,247,0.3); }
+.sel-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--sf); border-top: 1px solid var(--bd); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; z-index: 50; transform: translateY(100%); transition: transform .2s; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); }
+.sel-bar.show { transform: translateY(0); }
+.sel-bar-left, .sel-bar-right { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.photo-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--bg); }
+.pc-body { padding: 7px 9px 8px; }
+.pc-cat  { font-size: 0.62rem; color: var(--tx3); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-date { font-size: 0.68rem; color: var(--tx2); margin-bottom: 3px; }
+.pc-tag  { font-size: 0.75rem; font-weight: 700; color: var(--tx); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-badges { display: flex; gap: 3px; flex-wrap: wrap; }
+.badge { font-size: 0.58rem; padding: 1px 5px; border-radius: 10px; font-weight: 600; border: 1px solid; }
+.b-wt-new  { color: #3fb950; border-color: rgba(63,185,80,.35); background: rgba(63,185,80,.08); }
+.b-wt-pre  { color: #f0883e; border-color: rgba(240,136,62,.35); background: rgba(240,136,62,.08); }
+.b-wt-post { color: #2f81f7; border-color: rgba(47,129,247,.35); background: rgba(47,129,247,.08); }
+.b-team    { color: var(--purple); border-color: rgba(163,113,247,.35); background: rgba(163,113,247,.08); }
+
+/* 빈 상태 */
+.empty { padding: 60px 20px; text-align: center; color: var(--tx3); }
+.ei { font-size: 3rem; margin-bottom: 12px; }
+.empty p { font-size: 0.82rem; line-height: 1.8; }
+.empty strong { color: var(--tx2); display: block; font-size: 0.9rem; }
+
+/* 드래그 오버레이 */
+.drop-overlay { position: fixed; inset: 0; background: rgba(47,129,247,0.1); border: 3px dashed var(--ac); z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--ac); }
+.drop-overlay.active { display: flex; }
+
+/* 모달 공통 */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 100; display: none; align-items: center; justify-content: center; }
+.overlay.show { display: flex; }
+.modal { background: var(--sf); border: 1px solid var(--bd); border-radius: 12px; padding: 24px; max-height: 90vh; overflow-y: auto; position: relative; width: 540px; max-width: 96vw; }
+/* 보기/수정 전환 시 내용 길이가 달라도 창 크기가 그대로 유지되도록 고정 높이를 준다.
+   버튼 줄은 margin-top:auto로 항상 창 맨 아래에 붙어서, 보기/수정 내용 길이가 서로
+   달라도 두 모드의 버튼 위치가 항상 같은 높이에서 맞춰진다. */
+#detModal { height: 94vh; max-height: 94vh; overflow: hidden; display: flex; flex-direction: column; }
+#detModal #detView, #detModal #detEdit { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#detModal .m-footer, #detModal .m-footer-group { margin-top: auto; flex-shrink: 0; }
+.m-footer-group { display: flex; flex-direction: column; gap: 8px; }
+#detModal .m-footer-group .m-footer { margin-top: 0; flex-shrink: 1; }
+.modal::-webkit-scrollbar { width: 5px; }
+.modal::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 3px; }
+.m-title { font-size: 1rem; font-weight: 700; margin-bottom: 18px; }
+.m-close { position: absolute; top: 14px; right: 14px; z-index: 10; background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 1.1rem; padding: 4px 6px; line-height: 1; border-radius: 4px; }
+.m-close:hover { background: rgba(255,255,255,0.07); color: var(--tx); }
+.m-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* 업로드 모달 */
+.up-zone { border: 2px dashed var(--bd); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s; margin-bottom: 16px; }
+.up-zone:hover { border-color: var(--ac); }
+.up-zone-ico { font-size: 2rem; margin-bottom: 8px; }
+.up-zone-txt { font-size: 0.8rem; color: var(--tx2); }
+.up-zone-sub { font-size: 0.7rem; color: var(--tx3); margin-top: 4px; }
+.up-list { max-height: 90px; overflow-y: auto; margin-bottom: 12px; font-size: 0.72rem; color: var(--tx3); }
+.up-list-item { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; cursor: pointer; }
+.up-list-item:hover { background: rgba(255,255,255,0.05); color: var(--tx2); }
+.up-list-item.sel { background: rgba(47,129,247,0.12); color: var(--ac2); }
+
+/* 폼 그룹 */
+.fg { margin-bottom: 12px; }
+.fg label { display: block; font-size: 0.74rem; color: var(--tx2); margin-bottom: 4px; font-weight: 600; }
+/* 사진 상세 수정 폼은 사진 영역을 최대한 키우기 위해 필드 사이 간격을 더 좁게 쓴다 */
+#detEdit .fg { margin-bottom: 7px; }
+#detEdit .fg label { margin-bottom: 2px; }
+.fg input, .fg select, .fg textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--bd);
+  border-radius: 6px; color: var(--tx); font-size: 0.8rem;
+  padding: 7px 10px; font-family: inherit;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--ac); }
+.fg textarea { resize: vertical; min-height: 60px; }
+#eNote { min-height: 34px; height: 34px; }
+#eDateTimeRow input { padding: 5px 6px; font-size: 0.76rem; }
+.fg-row { display: flex; gap: 10px; }
+.fg-row .fg { flex: 1; }
+.fg-row > input, .fg-row > select { flex: 1; min-width: 0; }
+.fg-row-compact { gap: 10px; justify-content: flex-start; }
+.fg-row-compact > input { flex: 0 0 auto; width: auto; }
+
+/* 자동 배지 */
+.auto-badge { font-size: 0.6rem; padding: 1px 5px; border-radius: 8px; background: rgba(47,129,247,0.15); color: var(--ac2); border: 1px solid rgba(47,129,247,0.3); font-weight: 600; vertical-align: middle; }
+
+/* 작업 구분 라디오 */
+.wt-radios { display: flex; gap: 6px; }
+.wt-radios label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--bd); border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 0.75rem; color: var(--tx2); transition: .12s; }
+.wt-radios label:has(input:checked) { border-color: var(--ac); color: var(--ac2); background: rgba(47,129,247,0.08); }
+.wt-radios input[type="radio"] { display: none; }
+
+/* OCR 상태 */
+.ocr-bar { background: var(--bg); border: 1px solid var(--bd); border-radius: 7px; padding: 8px 12px; margin-bottom: 14px; font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+.ocr-spin { animation: spin .8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ocr-retry { background: none; border: 1px solid var(--bd); border-radius: 4px; color: var(--tx3); cursor: pointer; font-size: 0.7rem; padding: 2px 7px; }
+.ocr-retry:hover { color: var(--tx2); }
+
+/* 프로그레스 */
+.prog { margin-bottom: 14px; }
+.prog-lbl { font-size: 0.75rem; color: var(--tx2); margin-bottom: 6px; }
+.prog-bg { background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+.prog-bar { height: 100%; background: var(--ac); border-radius: 4px; transition: width .3s; width: 0; }
+.prog-st  { font-size: 0.68rem; color: var(--tx3); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 배지 (사진 태그) */
+.pt { display: inline-block; font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; border: 1px solid var(--bd); color: var(--tx2); margin-right: 4px; }
+.pt-cat  { border-color: rgba(163,113,247,.4); color: var(--purple); background: rgba(163,113,247,.08); }
+.pt-new  { border-color: rgba(63,185,80,.35); color: var(--green); background: rgba(63,185,80,.08); }
+.pt-pre  { border-color: rgba(240,136,62,.35); color: var(--orange); background: rgba(240,136,62,.08); }
+.pt-post { border-color: rgba(47,129,247,.35); color: var(--ac2); background: rgba(47,129,247,.08); }
+
+/* 사진 상세 모달 */
+.det-img-wrap { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: var(--bg); }
+.det-img-wrap img { width: 100%; height: auto; max-height: 55vh; object-fit: contain; display: block; transform-origin: center center; transition: transform 0.15s ease-out, max-height 0.15s ease-out; touch-action: none; }
+/* 수정 모드는 입력칸이 많아 사진을 보기 모드와 완전히 같은 크기로 두면 취소/저장 버튼이
+   화면 밖으로 밀려 안 보이므로, 버튼이 항상 보이도록 수정 중에는 사진 높이를 줄인다. */
+#detModal.editing .det-img-wrap img { max-height: 49vh; }
+.det-img-wrap img.dragging { transition: none; cursor: grabbing; }
+.det-img-wrap img.zoomed { cursor: grab; }
+.det-zoom-ctrl { position: absolute; top: 8px; left: 8px; display: flex; align-items: center; gap: 4px; z-index: 5; }
+.det-zoom-btn { min-width: 28px; height: 28px; padding: 0 6px; border: none; border-radius: 6px; background: rgba(0,0,0,0.55); color: #fff; font-size: 0.85rem; line-height: 1; cursor: pointer; }
+.det-zoom-btn:hover { background: rgba(0,0,0,0.75); }
+.det-meta { display: grid; grid-template-columns: max-content max-content; gap: 8px 16px; font-size: 0.8rem; }
+.det-row { display: flex; flex-direction: column; gap: 2px; }
+.det-lbl { font-size: 0.66rem; color: var(--tx3); font-weight: 600; }
+.det-val { color: var(--tx); }
+
+/* 설정 */
+.folder-list { display: flex; flex-direction: column; gap: 5px; max-height: 260px; overflow-y: auto; margin-bottom: 14px; }
+.folder-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--bg); border: 1px solid var(--bd2); border-radius: 6px; font-size: 0.8rem; }
+.folder-item label { display: flex; align-items: center; gap: 7px; flex: 1; cursor: pointer; }
+.folder-item label input[type=checkbox] { accent-color: var(--ac); width: 14px; height: 14px; }
+.fi-ico { font-size: 0.9rem; }
+.fi-cnt { font-size: 0.7rem; color: var(--tx3); margin-left: auto; }
+.fi-del { background: none; border: none; cursor: pointer; color: var(--tx3); font-size: 0.85rem; padding: 2px 4px; border-radius: 4px; }
+.fi-del:hover { color: var(--red); background: rgba(248,81,73,0.1); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.chip { display: flex; align-items: center; gap: 4px; background: var(--sf2); border: 1px solid var(--bd); border-radius: 12px; padding: 3px 8px; font-size: 0.75rem; }
+.chip button { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 0.75rem; padding: 0; line-height: 1; }
+.chip button:hover { color: var(--red); }
+.add-row { display: flex; gap: 6px; }
+.add-row input { flex: 1; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; color: var(--tx); font-size: 0.8rem; padding: 6px 9px; font-family: inherit; }
+.add-row input:focus { outline: none; border-color: var(--ac); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <img class="hdr-logo-icon" src="Work%20photo_icon/icon-192.png" alt=""/>
+    <span class="hdr-logo-txt">작업 사진 관리</span>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-crumb" id="hdrCrumb"><span class="cc">전체 사진</span></div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
+    <button class="btn btn-ghost" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
+    <button class="btn btn-ghost" onclick="openPhotoSheet()" title="사진대지 생성기 열기">🖨️ 사진대지 생성기</button>
+    <button class="btn btn-ghost" id="folderBtn" onclick="handleFolderBtnClick()" title="PC 폴더 지정 / 불러오기">📂 PC 폴더 지정</button>
+    <button class="btn btn-ghost" id="dupFilterBtn" onclick="toggleDupFilter()" title="같은 기기번호가 여러 장인 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
+    <button class="btn btn-ghost" id="incompleteFilterBtn" onclick="toggleIncompleteFilter()" title="작업분류·기기번호·작업구역·팀명 중 하나라도 비어있는 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
+    <button class="btn btn-primary" onclick="openUpload()">+ 사진 추가</button>
+    <button class="btn btn-ghost" onclick="openSettings()" title="설정">⚙️</button>
+  </div>
+</div>
+
+<!-- 저장 폴더 안내 배너 -->
+<div id="folderNotice" style="display:none; align-items:center; gap:10px; background:rgba(240,136,62,0.12); border-bottom:1px solid rgba(240,136,62,0.35); color:var(--orange); font-size:0.78rem; padding:8px 16px;">
+  <span id="folderNoticeText" style="flex:1"></span>
+  <button class="btn btn-ghost" id="folderNoticeBtn" style="height:24px;padding:2px 10px;font-size:0.72rem;"></button>
+</div>
+
+<!-- 상위 메뉴 -->
+<div class="menu-tabs" id="menuTabs">
+  <button type="button" class="menu-tab" data-menu="시공" onclick="setActiveMenu('시공')">시공</button>
+  <button type="button" class="menu-tab" data-menu="품질" onclick="setActiveMenu('품질')">품질</button>
+  <button type="button" class="menu-tab" data-menu="자재" onclick="setActiveMenu('자재')">자재</button>
+  <button type="button" class="menu-tab" data-menu="안전" onclick="setActiveMenu('안전')">안전</button>
+  <button type="button" class="menu-tab" data-menu="화기/유도" onclick="setActiveMenu('화기/유도')">화기/유도</button>
+</div>
+
+<!-- 앱 바디 -->
+<div class="app-body">
+
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <div class="sb-top">
+      <div class="sb-all sel" id="sbAll" onclick="selectAllCat()">
+        <span>🗂️</span>
+        <span style="flex:1">전체 보기</span>
+        <span class="sb-cnt has" id="sbAllCnt">0</span>
+      </div>
+    </div>
+    <div class="sb-sep"></div>
+    <div class="sb-section-lbl">작업 구분</div>
+    <div class="sb-list" id="sbList"></div>
+  </div>
+
+  <!-- 컨텐츠 -->
+  <div class="content">
+    <div class="filterbar">
+      <select id="fDate" onchange="renderPhotos()"><option value="">전체 날짜</option></select>
+      <input type="text" id="fSearch" placeholder="기기번호 검색..." oninput="renderPhotos()">
+      <select id="fTeam" onchange="renderPhotos()">
+        <option value="">전체 팀명</option>
+      </select>
+<select id="fWt" onchange="renderPhotos()">
+        <option value="">전체 구분</option>
+        <option>신규</option><option>수정-작업전</option><option>수정-작업후</option>
+      </select>
+      <div class="f-sep"></div>
+      <button class="f-reset" onclick="resetFilter()">초기화</button>
+      <button class="f-reset" id="cloudFilterBtn" onclick="toggleCloudFilter()" title="서버(Supabase)에 실제로 존재하는 사진만 보기">☁️ 클라우드만</button>
+      <button class="f-reset" id="selModeBtn" onclick="toggleSelMode()">☑️ 선택</button>
+      <span class="f-count" id="fCount"></span>
+    </div>
+    <div class="scroll" id="mainScroll"><div id="viewContent"></div></div>
+  </div>
+</div>
+
+<!-- 선택 다운로드 바 -->
+<div class="sel-bar" id="selBar">
+  <div class="sel-bar-left">
+    <button class="btn btn-ghost" id="selAllBtn" onclick="selectAllFiltered()">전체 선택</button>
+    <span id="selCount" style="font-size:0.82rem;color:var(--tx2);min-width:64px;">0장 선택됨</span>
+  </div>
+  <div class="sel-bar-right">
+    <button class="btn btn-ghost" onclick="exitSelMode()">취소</button>
+    <button class="btn btn-danger" id="delSelBtn" onclick="deleteSelected()" disabled>🗑 선택 삭제</button>
+    <button class="btn btn-ghost" id="editSelBtn" onclick="openBatchEdit()" disabled>✏️ 일괄 수정</button>
+    <button class="btn btn-primary" id="dlSelBtn" onclick="downloadSelected()" disabled>⬇️ 선택 다운로드</button>
+  </div>
+</div>
+
+<!-- 선택 일괄 수정 모달 -->
+<div class="overlay" id="batchEditOverlay">
+  <div class="modal" style="width:480px;max-width:96vw;">
+    <button class="m-close" onclick="closeBatchEdit()">✕</button>
+    <div class="m-title">✏️ 선택 일괄 수정 (<span id="beCount">0</span>장)</div>
+    <p style="font-size:0.78rem;color:var(--tx3);margin-bottom:14px;line-height:1.6;">
+      값을 지정한 항목만 선택된 사진 전체에 적용됩니다.<br>"-- 변경 안함 --" 또는 빈 칸으로 두면 그대로 유지됩니다.
+    </p>
+    <div class="fg">
+      <label>작업 구분</label>
+      <select id="beWt">
+        <option value="">-- 변경 안함 --</option>
+        <option value="신규">🆕 신규</option>
+        <option value="수정-작업전">📷 수정-작업전</option>
+        <option value="수정-작업후">✅ 수정-작업후</option>
+      </select>
+    </div>
+    <div class="fg"><label>작업 분류</label><select id="beCat"></select></div>
+    <div class="fg-row">
+      <div class="fg"><label>팀명</label><select id="beTeam"></select></div>
+      <div class="fg"><label>작업구역</label><select id="beArea"></select></div>
+    </div>
+    <div class="fg">
+      <label>특이사항 (비워두면 변경 안함)</label>
+      <textarea id="beNote" placeholder="비워두면 변경하지 않습니다"></textarea>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-ghost" onclick="closeBatchEdit()">취소</button>
+      <button class="btn btn-primary" id="beSaveBtn" onclick="saveBatchEdit()">💾 적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- 드래그 오버레이 -->
+<div class="drop-overlay" id="dropOverlay">📁 여기에 놓으면 업로드됩니다</div>
+
+<!-- 업로드 모달 -->
+<div class="overlay" id="upOverlay">
+  <div class="modal">
+    <button class="m-close" id="upCloseBtn" onclick="closeUpload()">✕</button>
+    <div class="m-title">📷 사진 추가</div>
+
+    <div class="ocr-bar" id="ocrBar" style="display:none;">
+      <span id="ocrIcon" class="ocr-spin">⏳</span>
+      <span id="ocrStatus">OCR 분석 중...</span>
+      <button class="ocr-retry" id="ocrRetryBtn" onclick="retryOCR()" style="display:none">🔄 재시도</button>
+    </div>
+
+    <div class="up-zone" id="upZone" onclick="document.getElementById('fileInput').click()">
+      <div class="up-zone-ico">📂</div>
+      <div class="up-zone-txt">클릭하거나 파일을 드래그</div>
+      <div class="up-zone-sub">JPG, PNG, HEIC 지원 · 여러 장 선택 가능</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+    <div class="up-list" id="upList"></div>
+
+    <div class="prog" id="upProg" style="display:none;">
+      <div class="prog-lbl" id="upProgLbl"></div>
+      <div class="prog-bg"><div class="prog-bar" id="upProgBar"></div></div>
+    </div>
+
+    <div class="fg-row">
+      <div class="fg">
+        <label>날짜 <span class="auto-badge" id="dateBadge" style="display:none">자동</span></label>
+        <input type="date" id="upDate">
+      </div>
+      <div class="fg">
+        <label>시간 <span class="auto-badge" id="timeBadge" style="display:none">자동</span></label>
+        <input type="time" id="upTime" lang="en-GB">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>작업 구분 <span class="auto-badge" id="wtBadge" style="display:none">자동</span></label>
+      <div class="wt-radios" id="wtRg">
+        <label><input type="radio" name="upWt" id="upWtNew" value="신규" checked onchange="toggleUpPhase()"><span>🆕 <span id="upWtNewTxt">신규</span></span></label>
+        <label><input type="radio" name="upWt" id="upWtMod" value="수정" onchange="toggleUpPhase()"><span>✏️ <span id="upWtModTxt">수정</span></span></label>
+      </div>
+      <div id="upPhaseWrap" style="display:none;margin-top:6px;">
+        <select id="upPhase" class="f"></select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>작업 분류 <span class="auto-badge" id="catBadge" style="display:none">자동</span></label>
+      <select id="upCat"></select>
+    </div>
+
+    <div class="fg-row">
+      <div class="fg">
+        <label>팀명 <span class="auto-badge" id="teamBadge" style="display:none">자동</span></label>
+        <select id="upTeam"></select>
+      </div>
+      <div class="fg">
+        <label>작업구역</label>
+        <select id="upArea"></select>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>기기번호 <span class="auto-badge" id="tagBadge" style="display:none">자동</span></label>
+      <input type="text" id="upTag" placeholder="예: PT-2101, EQ-2305 (TAG NO, EQ NO 등)">
+    </div>
+
+    <div class="fg">
+      <label>특이사항 <span class="auto-badge" id="noteBadge" style="display:none">자동</span></label>
+      <select id="upNotePreset" onchange="applyNotePreset(this)" style="margin-bottom:5px;display:none;">
+        <option value="">-- 프리셋 선택 --</option>
+      </select>
+      <textarea id="upNote" placeholder="특이사항을 입력하세요..."></textarea>
+    </div>
+
+    <div class="m-footer">
+      <button class="btn btn-ghost" onclick="closeUpload()">취소</button>
+      <button class="btn btn-primary" id="upSaveBtn" onclick="savePhotos()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 상세 모달 -->
+<div class="overlay" id="detOverlay">
+  <div class="modal" id="detModal" style="width:620px;max-width:94vw;">
+    <button class="m-close" onclick="closeDetail()">✕</button>
+    <div class="det-img-wrap" id="detImgWrap">
+      <img id="detImg" src="" alt="">
+      <div class="det-zoom-ctrl">
+        <button type="button" class="det-zoom-btn" onclick="zoomDetBy(-0.4)" title="축소">−</button>
+        <button type="button" class="det-zoom-btn" id="detZoomPct" onclick="resetDetZoom()" title="원래 크기로">100%</button>
+        <button type="button" class="det-zoom-btn" onclick="zoomDetBy(0.4)" title="확대">+</button>
+      </div>
+    </div>
+
+    <!-- 보기 모드 -->
+    <div id="detView">
+      <div style="margin-bottom:10px;"><div id="dPath"></div></div>
+      <div class="det-meta">
+        <div class="det-row"><div class="det-lbl">기기번호</div><div class="det-val" id="dTag"></div></div>
+        <div class="det-row"><div class="det-lbl">작업구역</div><div class="det-val" id="dArea"></div></div>
+        <div class="det-row"><div class="det-lbl">팀명</div><div class="det-val" id="dTeam"></div></div>
+        <div class="det-row"><div class="det-lbl">날짜/시간</div><div class="det-val" id="dDate"></div></div>
+        <div class="det-row" style="grid-column:1/-1"><div class="det-lbl">특이사항</div><div class="det-val" id="dNote"></div></div>
+        <div class="det-row" style="grid-column:1/-1"><div class="det-lbl">파일명</div><div class="det-val" id="dName" style="font-size:0.72rem;color:var(--tx2);word-break:break-all;"></div></div>
+      </div>
+      <div class="m-footer-group">
+        <div style="display:flex;justify-content:space-between;">
+          <button class="btn btn-ghost" onclick="navigateDetail(-1)">◀ 이전</button>
+          <button class="btn btn-ghost" onclick="navigateDetail(1)">다음 ▶</button>
+        </div>
+        <div class="m-footer" style="flex-wrap:nowrap;justify-content:space-between;">
+          <button class="btn btn-danger" onclick="deletePhoto()">🗑 삭제</button>
+          <button class="btn btn-ghost" onclick="forceResyncPhoto()" title="예전에 분류만 바뀌고 파일명/워터마크가 안 따라간 사진을 지금 분류·기기번호 기준으로 강제로 맞춥니다">🔧 동기화</button>
+          <button class="btn btn-ghost" onclick="reuploadPhotoToCloud()" title="서버 원본 파일이 유실됐지만 이 브라우저에는 사진이 남아있는 경우, 지금 값 기준으로 서버에 새로 올립니다">☁️ 서버로 재전송</button>
+          <button class="btn btn-ghost" onclick="openDetailEdit()">✏️ 수정</button>
+        </div>
+        <div class="m-footer">
+          <button class="btn btn-ghost" onclick="closeDetail()">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수정 모드 -->
+    <div id="detEdit" style="display:none;">
+      <div class="fg-row">
+        <div class="fg">
+          <label>작업 구분</label>
+          <div class="wt-radios" id="eWtRg">
+            <label><input type="radio" name="eWt" id="eWtNew" value="신규" checked onchange="toggleEPhase()"><span>🆕 <span id="eWtNewTxt">신규</span></span></label>
+            <label><input type="radio" name="eWt" id="eWtMod" value="수정" onchange="toggleEPhase()"><span>✏️ <span id="eWtModTxt">수정</span></span></label>
+          </div>
+        </div>
+        <div class="fg" id="ePhaseWrap" style="display:none;">
+          <label>작업진행</label>
+          <select id="ePhase" class="f"></select>
+        </div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label id="lblECat">작업 분류</label><select id="eCat"></select></div>
+        <div class="fg"><label>기기번호</label><input type="text" id="eTag" placeholder="예: PT-2101, EQ-2305"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>작업구역</label><select id="eArea"></select></div>
+        <div class="fg"><label>팀명</label><select id="eTeam"></select></div>
+      </div>
+      <div class="fg">
+        <label>특이사항</label>
+        <select id="eNotePreset" onchange="applyEditNotePreset(this)" style="margin-bottom:5px;display:none;"></select>
+        <textarea id="eNote" placeholder="특이사항을 입력하세요..."></textarea>
+      </div>
+      <div class="fg">
+        <label>날짜/시간</label>
+        <div class="fg-row fg-row-compact" id="eDateTimeRow">
+          <input type="date" id="eDate">
+          <input type="time" id="eTime" lang="en-GB">
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-ghost" onclick="cancelDetailEdit()">취소</button>
+        <button class="btn btn-primary" onclick="saveDetailEdit()">💾 저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 자동 분류 모달 -->
+<div class="overlay" id="batchOverlay">
+  <div class="modal" style="width:480px;max-width:100%;">
+    <div class="m-title">🔄 전체 자동 분류</div>
+    <p style="font-size:0.81rem;color:var(--tx2);margin-bottom:14px;line-height:1.7;">
+      저장된 사진을 OCR로 분석하여 <strong>작업 분류</strong>·<strong>작업 구분</strong>·<strong>기기번호</strong>를<br>
+      자동으로 올바른 폴더에 배치합니다.
+    </p>
+
+    <div id="batchOptions" style="margin-bottom:16px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.82rem;padding:8px 10px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);">
+          <input type="radio" name="batchMode" value="uncat" checked style="accent-color:var(--ac);">
+          <span>
+            <strong>미분류 사진만</strong><br>
+            <span style="font-size:0.72rem;color:var(--tx3);">분류가 없거나 Others인 사진만 분석</span>
+          </span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.82rem;padding:8px 10px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);">
+          <input type="radio" name="batchMode" value="all" style="accent-color:var(--ac);">
+          <span>
+            <strong>전체 사진 재분류</strong><br>
+            <span style="font-size:0.72rem;color:var(--tx3);">모든 사진 재분석 (기존 분류 덮어씀)</span>
+          </span>
+        </label>
+      </div>
+      <div style="margin-top:10px;">
+        <label style="display:block;font-size:0.78rem;color:var(--tx2);margin-bottom:6px;">작업분류 대상</label>
+        <select id="batchCatFilter" style="width:100%;">
+          <option value="">전체 분류</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="prog" id="batchProg" style="display:none;margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span class="prog-lbl" id="batchLbl" style="margin:0;">준비 중...</span>
+        <span style="font-size:0.7rem;color:var(--tx3);" id="batchPercent">0%</span>
+      </div>
+      <div class="prog-bg"><div class="prog-bar" id="batchBar"></div></div>
+      <div class="prog-st" id="batchSt" style="margin-top:5px;"></div>
+    </div>
+
+    <div id="batchResult" style="display:none;margin-top:12px;padding:10px 12px;border-radius:7px;font-size:0.8rem;line-height:1.8;"></div>
+
+    <div class="m-footer" style="margin-top:16px;">
+      <button class="btn btn-ghost" id="batchCancelBtn" onclick="closeBatch()">취소</button>
+      <button class="btn btn-primary" id="batchStartBtn" onclick="startBatch()">🔍 분석 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- 선택 동기화 모달 -->
+<div class="overlay" id="syncFilterOverlay">
+  <div class="modal" style="width:420px;">
+    <button class="m-close" onclick="closeSyncFilter()">✕</button>
+    <div class="m-title">☁️ 선택 동기화</div>
+    <div style="font-size:0.74rem;color:var(--tx3);margin-bottom:14px;line-height:1.6;">
+      기간과 작업분류를 지정하면 해당 조건에 맞는 사진만 클라우드에서 가져옵니다.<br>비워두면 전체를 대상으로 합니다.
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label>기간</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="syncFromDate" style="flex:1;">
+        <span>~</span>
+        <input type="date" id="syncToDate" style="flex:1;">
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:18px;">
+      <label>작업분류</label>
+      <select id="syncCatFilter" style="width:100%;">
+        <option value="">전체</option>
+      </select>
+    </div>
+    <div class="m-footer">
+      <button class="btn btn-ghost" onclick="closeSyncFilter()">취소</button>
+      <button class="btn btn-primary" onclick="startFilteredSync()">☁️ 동기화 시작</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="setOverlay">
+  <div class="modal" style="width:500px;">
+    <button class="m-close" onclick="closeSettings()">✕</button>
+    <div class="m-title">⚙️ 설정</div>
+    <div style="background:linear-gradient(135deg,#1E3A5F,#2E5F9E);color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;">
+      📱 작업사진 앱과 동일한 폴더·분류 설정을 공유합니다
+    </div>
+
+    <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bd);">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:8px;">💾 PC 저장 폴더</div>
+      <div style="font-size:0.74rem;color:var(--tx3);margin-bottom:8px;line-height:1.6;">사진 검토·수정이 끝난 뒤 "PC 폴더에 저장"을 누르면 저장됩니다.<br>Chrome / Edge 전용 기능입니다.</div>
+      <div id="folderStatus" style="font-size:0.77rem;color:var(--tx3);margin-bottom:10px;">폴더가 지정되지 않았습니다.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="pickFolder()">📁 폴더 선택</button>
+        <button class="btn btn-ghost" id="folderAllowBtn" onclick="requestFolderPermission()" style="display:none">🔓 허용</button>
+        <button class="btn btn-ghost" id="folderScanBtn" onclick="loadFromFolder()" style="display:none">🔄 새로고침</button>
+        <button class="btn btn-primary" id="saveToFolderBtn" onclick="saveReviewedToPCFolder()" title="새로 저장할 사진이 없으면, PC 폴더에서 파일을 지운 경우 등에 대비해 전부 다시 저장할지 물어봅니다">💾 PC 폴더에 저장</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bd);">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:8px;">☁️ 서버(Supabase) 재동기화</div>
+      <div style="font-size:0.74rem;color:var(--tx3);margin-bottom:8px;line-height:1.6;">"✏️ 일괄 수정"으로 채운 내용이 이 브라우저에만 저장되고 서버에는 반영 안 된 사진들을 지금 서버로 다시 올립니다.</div>
+      <button class="btn btn-primary" id="resyncAllBtn" onclick="resyncAllToCloud()">♻️ 로컬 수정 내용 서버로 재동기화</button>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;" id="folderSectionTitle">📁 작업 분류 폴더 관리</div>
+      <div class="folder-list" id="folderList"></div>
+      <div class="add-row">
+        <input type="text" id="newCat" placeholder="새 분류 이름...">
+        <button class="btn btn-ghost" onclick="addCat()">+ 추가</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">📍 작업구역 관리</div>
+      <div class="chip-row" id="areaChips"></div>
+      <div class="add-row">
+        <input type="text" id="newArea" placeholder="새 구역 이름...">
+        <button class="btn btn-ghost" onclick="addArea()">+ 추가</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">👥 팀명 관리</div>
+      <div class="chip-row" id="teamChips"></div>
+      <div class="add-row">
+        <input type="text" id="newTeam" placeholder="새 팀명 입력...">
+        <button class="btn btn-ghost" onclick="addTeam()">+ 추가</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">📝 특이사항 프리셋</div>
+      <div class="chip-row" id="notePresetChips"></div>
+      <div class="add-row">
+        <input type="text" id="newNotePreset" placeholder="자주 쓰는 특이사항...">
+        <button class="btn btn-ghost" onclick="addNotePreset()">+ 추가</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <button class="btn btn-primary" id="saveAllSettingsBtn" onclick="saveAllSettings()" style="width:100%;">💾 전체 설정 저장</button>
+      <div style="font-size:0.7rem;color:var(--tx3);margin-top:6px;">추가·삭제는 바로 반영되지만, 이 버튼을 누르면 작업분류·작업구역·팀명·특이사항 프리셋이 클라우드에 확실히 동기화됩니다.</div>
+    </div>
+
+    <div class="m-footer">
+      <button class="btn btn-ghost" onclick="closeSettings()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Supabase ─────────────────────────────────────────
+const SUPABASE_URL='https://dteljgmdbfyxubtpogcj.supabase.co';
+const SUPABASE_KEY='sb_publishable_VC2GcwpxDg_zVbFgOnpfzg__sictyqc';
+let sbClient=null;
+try{ sbClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }
+catch(e){ console.error('Supabase 초기화 실패',e); }
+
+function openSyncFilter(){
+  const sel=document.getElementById('syncCatFilter');
+  sel.innerHTML='<option value="">전체</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('syncFromDate').value='';
+  document.getElementById('syncToDate').value='';
+  document.getElementById('syncFilterOverlay').classList.add('show');
+}
+function closeSyncFilter(){
+  document.getElementById('syncFilterOverlay').classList.remove('show');
+}
+function startFilteredSync(){
+  const fromDate=document.getElementById('syncFromDate').value;
+  const toDate=document.getElementById('syncToDate').value;
+  const cat=document.getElementById('syncCatFilter').value;
+  closeSyncFilter();
+  syncFromSupabase({fromDate, toDate, cat});
+}
+
+// filters: {fromDate, toDate, cat} 모두 선택사항 — 지정한 것만 클라우드 쿼리에 조건으로 걸린다.
+// PC 폴더 저장은 여기서 하지 않는다 — 사진 검토·수정이 끝난 뒤 saveReviewedToPCFolder()로 별도 진행.
+async function syncFromSupabase(filters){
+  filters = filters || {};
+  const hasFilter = !!(filters.fromDate || filters.toDate || filters.cat);
+  if(!sbClient){ alert('Supabase 연결 실패'); return; }
+
+  const btn=document.getElementById('syncBtn');
+  btn.disabled=true; btn.textContent='⏳ 동기화 중...';
+  try {
+    let query = sbClient.from('work_photos').select('*').order('date',{ascending:false});
+    if(filters.fromDate) query = query.gte('date', filters.fromDate);
+    if(filters.toDate) query = query.lte('date', filters.toDate);
+    if(filters.cat) query = query.eq('cat', filters.cat);
+    const {data:records,error}=await query;
+    if(error) throw error;
+    if(!records||records.length===0){ alert(hasFilter?'조건에 맞는 사진이 클라우드에 없습니다.':'클라우드에 사진이 없습니다.'); return; }
+
+    // 모바일(work-shoot)에서 보낸 사진의 팀명(sender)이 갤러리의 팀명 관리 목록에 없으면 자동으로 추가한다.
+    let newTeams=0;
+    new Set(records.map(r=>r.sender).filter(Boolean)).forEach(t=>{
+      if(!teams.includes(t)){ teams.push(t); newTeams++; }
+    });
+    if(newTeams>0){ saveSettingsLocal(); pushSettingsToSupabase(); }
+
+    // 클라우드 레코드는 바뀌지 않는 id로 매칭한다 — photo_url은 기기번호/분류 수정 시
+    // 파일명과 함께 바뀌므로, url만으로 매칭하면 같은 사진을 "새 사진"으로 오인해 중복 다운로드된다.
+    const recordsById={};
+    records.forEach(r=>{ if(r.id!=null) recordsById[r.id]=r; });
+    const recordsByUrl={};
+    records.forEach(r=>{ if(r.photo_url) recordsByUrl[r.photo_url]=r; });
+
+    // 이미 로컬에 있는 사진: 팀명(sender) 비어있는 경우 보정 + cloud_id 없으면 채워넣기 +
+    // 클라우드에서 파일명/URL이 바뀐 경우 로컬 쪽도 새 URL로 갱신(끊긴 이미지 링크 방지)
+    let backfilled=0;
+    for(const p of photos){
+      if(!p.cloud_url) continue;
+      const rec = (p.cloud_id!=null ? recordsById[p.cloud_id] : null) || recordsByUrl[p.cloud_url];
+      if(!rec) continue;
+      let changed=false;
+      if(rec.sender && !p.team){ p.team=rec.sender; changed=true; }
+      // area(작업구역)도 team과 마찬가지로 이 기기 로컬엔 비어있는데 클라우드엔 값이 있는 경우가
+      // 있을 수 있다(다른 기기/세션에서 채워짐 등). 비어두면 이후 자동전환·재동기화 시
+      // syncEditToCloud가 전체 필드를 덮어쓰면서 클라우드의 값까지 빈 값으로 지워버리므로 보정한다.
+      if(rec.loc && !p.area){ p.area=rec.loc; changed=true; }
+      if(!p.menu){ p.menu=rec.menu||'시공'; changed=true; }
+      // 작업분류가 아직 없으면(자동 분류 전) Others로 채워서 사이드바 어딘가에는 항상 보이게 한다
+      if(!p.cat){ p.cat=rec.cat||'Others'; changed=true; }
+      if(p.cloud_id==null && rec.id!=null){ p.cloud_id=rec.id; changed=true; }
+      if(rec.photo_url && rec.photo_url!==p.cloud_url){
+        p.cloud_url=rec.photo_url;
+        p.name=rec.photo_url.split('/').pop().split('?')[0];
+        changed=true;
+      }
+      if(changed){ await savePhotoToDB(p); backfilled++; }
+    }
+    if(backfilled>0){ renderSidebar(); renderPhotos(); }
+
+    // id(없으면 url) 기준으로 이미 로컬에 있는 사진은 걸러낸다
+    const localIds=new Set(photos.filter(p=>p.cloud_id!=null).map(p=>p.cloud_id));
+    const localUrls=new Set(photos.filter(p=>p.cloud_url).map(p=>p.cloud_url));
+    const newRecs=records.filter(r=>{
+      if(r.id!=null && localIds.has(r.id)) return false;
+      if(r.photo_url && localUrls.has(r.photo_url)) return false;
+      return true;
+    });
+    if(newRecs.length===0){
+      let doneMsg = '이미 최신 상태입니다.';
+      if (backfilled>0) doneMsg += ` (팀명 ${backfilled}장 보정 완료)`;
+      if (newTeams>0) doneMsg += ` (새 팀명 ${newTeams}개 자동 등록)`;
+      if (backfilled===0 && newTeams===0) doneMsg += ' (클라우드 총 '+records.length+'장)';
+      alert(doneMsg);
+      if (newTeams>0) { renderTeamChips(); populateSelects(); }
+      return;
+    }
+
+    let saved=0;
+    for(let i=0;i<newRecs.length;i++){
+      const rec=newRecs[i];
+      btn.textContent='⏳ '+(i+1)+'/'+newRecs.length+'장 다운로드...';
+      try{
+        const resp=await fetch(rec.photo_url);
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const blob=await resp.blob();
+        const fname=rec.photo_url.split('/').pop().split('?')[0];
+
+        const dataUrl=await new Promise((res,rej)=>{
+          const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsDataURL(blob);
+        });
+        const photo={
+          id:Date.now()+Math.random(),
+          date:rec.date||'', time:rec.time||'', tag:rec.tag||'',
+          cat:rec.cat||'Others', wt:rec.work_type||'', team:rec.sender||'',
+          area:rec.loc||'', note:rec.note||'', name:fname,
+          size:blob.size, dataUrl,
+          created:rec.created_at||rec.date||new Date().toISOString(),
+          source:'cloud', cloud_url:rec.photo_url, cloud_id:rec.id!=null?rec.id:null, menu:rec.menu||'시공',
+          folderSaved:false // PC 폴더 저장은 검토·수정이 끝난 뒤 saveReviewedToPCFolder()에서 처리
+        };
+        await savePhotoToDB(photo);
+        photos.unshift(photo);
+        saved++;
+      }catch(e){ console.error('다운로드 실패:',rec.photo_url,e); }
+    }
+    photos.sort((a,b)=>(b.date+b.created).localeCompare(a.date+a.created));
+    populateDateFilter(); renderSidebar(); renderPhotos(); updateHeader();
+    migrateSigongNewToDone();
+    if (newTeams>0) { renderTeamChips(); populateSelects(); }
+    let msg = `✅ ${saved}장 동기화 완료!`;
+    if (backfilled>0) msg += `\n👤 팀명 ${backfilled}장 보정 완료`;
+    if (newTeams>0) msg += `\n👥 새 팀명 ${newTeams}개 자동 등록`;
+    if (dirHandle) msg += '\n💾 검토·수정이 끝나면 설정 화면에서 "PC 폴더에 저장"을 눌러주세요.';
+    alert(msg);
+  }catch(e){
+    console.error('동기화 오류:',e);
+    alert('동기화 실패: '+e.message);
+  }finally{
+    btn.disabled=false; btn.textContent='☁️ 동기화';
+  }
+}
+
+// ── PC 폴더 저장 ────────────────────────────────────
+let dirHandle = null;
+
+async function loadFolderHandle() {
+  return new Promise(res => {
+    try {
+      const r = txStore('settings').get('folderHandle');
+      r.onsuccess = e => {
+        if (e.target.result) { dirHandle = e.target.result.value; updateFolderUI(); }
+        updateFolderNotice();
+        res();
+      };
+      r.onerror = () => res();
+    } catch(e) { res(); }
+  });
+}
+
+async function verifyFolderPermission() {
+  if (!dirHandle) return false;
+  try {
+    // queryPermission 건너뜀: 첫 await 후 user gesture 컨텍스트 소실 방지
+    const result = await dirHandle.requestPermission({ mode: 'readwrite' });
+    console.log('[폴더 권한]', result);
+    return result === 'granted';
+  } catch(e) {
+    console.error('[폴더 권한 오류]', e);
+    return false;
+  }
+}
+
+async function pickFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('이 기능은 Chrome/Edge에서만 지원됩니다.');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    dirHandle = handle;
+    // put()은 요청을 걸어놓기만 하고 바로 반환되므로, 저장이 실제로 끝났는지(혹은 실패했는지)
+    // 확인하지 않고 화면부터 갱신하면 "선택은 됐는데 저장은 실패"한 상태가 조용히 묻힐 수 있다.
+    await new Promise((resolve, reject) => {
+      const req = txStore('settings', 'readwrite').put({ key: 'folderHandle', value: handle });
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+    updateFolderUI();
+    updateFolderNotice();
+  } catch(e) {
+    console.error('[폴더 저장 실패]', e);
+    if (e.name !== 'AbortError') alert('폴더 선택 실패: ' + (e.message || e));
+  }
+}
+
+// 저장 폴더 미지정/권한 미허용 상태를 배너로 안내 (queryPermission은 프롬프트 없이 조회만 하므로 자동 호출해도 안전)
+async function updateFolderNotice() {
+  const notice = document.getElementById('folderNotice');
+  const text   = document.getElementById('folderNoticeText');
+  const btn    = document.getElementById('folderNoticeBtn');
+  if (!notice || !text || !btn) return;
+  if (!dirHandle) {
+    notice.style.display = 'flex';
+    text.textContent = '📂 사진을 PC 폴더에도 자동 저장하려면 저장 폴더를 지정하세요.';
+    btn.textContent = '폴더 지정';
+    btn.onclick = openSettings;
+    return;
+  }
+  let perm = 'prompt';
+  try { perm = await dirHandle.queryPermission({ mode: 'readwrite' }); } catch(e) {}
+  if (perm === 'granted') {
+    notice.style.display = 'none';
+    return;
+  }
+  notice.style.display = 'flex';
+  text.textContent = `💾 저장 폴더(${dirHandle.name}) 접근 권한이 필요합니다. 매 브라우저 재시작 시 한 번씩 다시 허용해야 합니다.`;
+  btn.textContent = '허용';
+  btn.onclick = async () => { await requestFolderPermission(); updateFolderNotice(); };
+}
+
+function updateFolderUI() {
+  const status    = document.getElementById('folderStatus');
+  const scanBtn   = document.getElementById('folderScanBtn');
+  const allowBtn  = document.getElementById('folderAllowBtn');
+  const hdrBtn    = document.getElementById('folderBtn');
+  if (dirHandle) {
+    const pending = photos.filter(p => p.cloud_url && !p.folderSaved).length;
+    if (status)   status.innerHTML = `<span style="color:var(--green);">✅ ${dirHandle.name}</span>` + (pending ? ` · 저장 대기 ${pending}장` : '');
+    if (scanBtn)  scanBtn.style.display  = '';
+    if (allowBtn) allowBtn.style.display = '';
+    if (hdrBtn)   hdrBtn.textContent = `📂 ${dirHandle.name}`;
+  } else {
+    if (status)   status.textContent = '폴더가 지정되지 않았습니다.';
+    if (scanBtn)  scanBtn.style.display  = 'none';
+    if (allowBtn) allowBtn.style.display = 'none';
+    if (hdrBtn)   hdrBtn.textContent = '📂 PC 폴더 지정';
+  }
+}
+// 헤더의 PC 폴더 버튼: 아직 폴더를 안 정했으면 바로 지정 화면(선택 대화상자)을 띄우고,
+// 이미 지정돼 있으면 그 폴더를 다시 스캔해서 새 파일을 불러온다.
+function handleFolderBtnClick(){
+  if (!dirHandle) { pickFolder(); return; }
+  loadFromFolder();
+}
+
+// 폴더/파일명으로 쓸 수 없는 문자 제거 (Windows 예약문자 \ / : * ? " < > | 포함, 빈 값 방지)
+function sanitizeFolderName(name) {
+  const cleaned = String(name == null ? '' : name).replace(/[\\/:*?"<>|]/g, '_').trim();
+  return cleaned || 'Others';
+}
+
+// 시공/품질은 수정 선택 시 변경전/변경후로, 시공은 신규 선택 시 진행중/완료로 세분화되지만
+// 폴더는 각각 "수정"/"신규" 하나로 묶음
+function workTypeFolderName(wt) {
+  if (wt === '변경전' || wt === '변경후' || wt === '수정-작업전' || wt === '수정-작업후') return '수정';
+  if (wt === '진행중' || wt === '완료') return '신규';
+  return wt || '기타';
+}
+
+async function savePhotoToFolder(blob, filename, cat, wt, menu, area) {
+  try {
+    // 메뉴 폴더 > 작업구역 폴더 > 작업분류 폴더 > 작업구분 폴더 순으로 자동 생성 (없으면 생성, 있으면 기존 사용)
+    // 사이드바(앱 화면)에서는 신규/수정으로 묶어서 보여주지만, PC 폴더 저장은 실제 단계
+    // (진행중/완료/변경전/변경후 등)를 그대로 폴더명으로 써서 세분화해 저장한다.
+    const menuFolder = sanitizeFolderName(menu || '시공');
+    const areaFolder = sanitizeFolderName(area || '구역없음');
+    const catFolder   = sanitizeFolderName(cat);
+    const wtFolder    = sanitizeFolderName(wt || '기타');
+    const menuDir = await dirHandle.getDirectoryHandle(menuFolder, { create: true });
+    const areaDir = await menuDir.getDirectoryHandle(areaFolder, { create: true });
+    const catDir  = await areaDir.getDirectoryHandle(catFolder, { create: true });
+    const wtDir   = await catDir.getDirectoryHandle(wtFolder, { create: true });
+    const fh = await wtDir.getFileHandle(filename, { create: true });
+    const writable = await fh.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    console.log('[폴더 저장 완료]', menuFolder + '/' + areaFolder + '/' + catFolder + '/' + wtFolder + '/' + filename);
+    return true;
+  } catch(e) {
+    console.error('[폴더 저장 실패]', filename, e);
+    return false;
+  }
+}
+
+async function requestFolderPermission() {
+  if (!dirHandle) { alert('먼저 폴더를 선택해 주세요.'); return; }
+  const ok = await verifyFolderPermission();
+  const status = document.getElementById('folderStatus');
+  if (ok) {
+    if (status) status.innerHTML = `<span style="color:var(--green);">✅ ${dirHandle.name} (접근 허용됨)</span>`;
+    alert('✅ 폴더 접근이 허용되었습니다. 검토·수정이 끝난 사진은 "PC 폴더에 저장" 버튼으로 저장하세요.');
+  } else {
+    alert('❌ 폴더 접근이 거부되었습니다. 브라우저 주소창 왼쪽 🔒 아이콘에서 권한을 허용해 주세요.');
+  }
+  updateFolderNotice();
+}
+
+// 클라우드에서 받아와 검토·수정까지 끝낸 사진들을 PC 폴더에 저장한다(폴더 자동생성 규칙은 기존과 동일).
+// 이미 저장된 사진(folderSaved:true)은 건너뛰어 중복 저장을 피한다. 새로 저장할 사진이 없으면,
+// PC 폴더에서 파일을 수동으로 지운 경우 등을 대비해 이미 저장된 사진까지 전부 다시 저장할지 물어본다.
+async function saveReviewedToPCFolder(){
+  if(!dirHandle){ alert('먼저 설정에서 PC 저장 폴더를 선택해 주세요.'); openSettings(); return; }
+  const ok = await verifyFolderPermission();
+  if(!ok){ alert('❌ 폴더 접근 권한이 없습니다. 🔓 허용 버튼을 먼저 눌러주세요.'); return; }
+
+  let targets = photos.filter(p => p.cloud_url && !p.folderSaved);
+  if(!targets.length){
+    const already = photos.filter(p => p.cloud_url && p.folderSaved);
+    if(!already.length){ alert('PC 폴더에 저장할 사진이 없습니다.'); return; }
+    const redo = confirm(`새로 저장할 사진은 없습니다.\nPC 폴더에서 파일을 수동으로 지운 경우 등에 대비해, 이미 저장된 것으로 표시된 사진 ${already.length}장을 전부 다시 저장할까요?`);
+    if(!redo) return;
+    for(const p of already){ p.folderSaved=false; await savePhotoToDB(p); }
+    targets = already;
+  }
+
+  const btn = document.getElementById('saveToFolderBtn');
+  const origText = btn ? btn.textContent : '';
+  if(btn) btn.disabled = true;
+
+  let saved=0, failed=0;
+  for(let i=0;i<targets.length;i++){
+    const p = targets[i];
+    if(btn) btn.textContent = `⏳ ${i+1}/${targets.length} 저장 중...`;
+    try{
+      const blob = await (await fetch(p.dataUrl)).blob();
+      const okSaved = await savePhotoToFolder(blob, p.name, p.cat||'', p.wt||'', p.menu||'시공', p.area||'');
+      if(okSaved){ p.folderSaved=true; await savePhotoToDB(p); saved++; }
+      else failed++;
+    }catch(e){ console.error('[PC 폴더 저장 실패]',p.name,e); failed++; }
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent=origText; }
+  updateFolderNotice();
+  alert(`💾 PC 폴더 저장 완료: ${saved}장${failed?`\n⚠️ 실패: ${failed}장`:''}`);
+}
+
+function parseWorkFilename(name) {
+  const r = {};
+  // WORK_YYYYMMDD_HHMM_... 형식
+  const m = name.match(/WORK_(\d{4})(\d{2})(\d{2})_(\d{4})_/);
+  if (m) {
+    r.date = `${m[1]}-${m[2]}-${m[3]}`;
+    r.time = `${m[4].slice(0,2)}:${m[4].slice(2)}`;
+  }
+  // 작업구분
+  const wtM = name.match(/WORK_\d+_\d+_(NEW|EDIT-BEFORE|EDIT-AFTER)_/);
+  if (wtM) {
+    const wmap = { NEW:'신규', 'EDIT-BEFORE':'수정-작업전', 'EDIT-AFTER':'수정-작업후' };
+    r.wt = wmap[wtM[1]] || '';
+  }
+  // 기기번호
+  const tagM = name.match(/\b([A-Z]{1,4}-\d{3,6}[A-Z]?)\b/);
+  if (tagM) r.tag = tagM[1];
+  // 작업분류 (파일명의 _를 공백으로 치환 후 매칭)
+  const namePlain = name.replace(/_/g, ' ');
+  for (const cat of cats) {
+    if (namePlain.includes(cat)) { r.cat = cat; break; }
+  }
+  return r;
+}
+
+async function loadFromFolder() {
+  if (!dirHandle) { openSettings(); return; }
+  const ok = await verifyFolderPermission();
+  if (!ok) { alert('폴더 접근 권한이 필요합니다.'); return; }
+
+  const btn = document.getElementById('folderBtn');
+  const scanBtn = document.getElementById('folderScanBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 스캔 중...'; }
+  if (scanBtn) { scanBtn.disabled = true; }
+
+  const existingNames = new Set(photos.map(p => p.name));
+  let added = 0;
+
+  async function processFile(fileHandle, name, cat, wtFolder, menuFolder, area) {
+    if (existingNames.has(name)) return;
+    try {
+      const file = await fileHandle.getFile();
+      const dataUrl = await fileToDataUrl(file);
+      const parsed = parseWorkFilename(name);
+      const photo = {
+        id: Date.now() + Math.random(),
+        name, date: parsed.date||'', time: parsed.time||'',
+        tag: parsed.tag||'', wt: parsed.wt || wtFolder || '',
+        cat: cat || parsed.cat || 'Others',
+        team:'', area: area||'', note:'', menu: menuFolder || activeMenu,
+        size: file.size, dataUrl,
+        created: file.lastModified
+          ? new Date(file.lastModified).toISOString()
+          : new Date().toISOString(),
+        source: 'folder'
+      };
+      await savePhotoToDB(photo);
+      photos.unshift(photo);
+      existingNames.add(name);
+      added++;
+    } catch(e) { console.error('파일 로드 실패:', name, e); }
+  }
+
+  // 작업구분 폴더명 집합 — 이전 버전(작업분류 폴더만 있는 구조)과 구분하는 용도
+  const WT_FOLDER_NAMES = new Set(['신규','수정','도급','사급','현장안전점검','안전용품','화기감시자','유도원','진행중','완료','변경전','변경후','수정-작업전','수정-작업후']);
+  // 메뉴 폴더명 집합 (폴더명 안전문자 치환 규칙과 동일하게 비교)
+  const MENU_FOLDER_NAMES = new Set(MENUS.map(m => sanitizeFolderName(m)));
+  // 작업구역 폴더명 집합
+  const AREA_FOLDER_NAMES = new Set(areas.map(a => sanitizeFolderName(a)).concat([sanitizeFolderName('구역없음')]));
+
+  // 작업구분(진행중/완료/변경전/변경후 등) 폴더 하나 안의 파일들을 처리
+  async function scanWtLevel(wtParentHandle, cat, menu, area) {
+    for await (const [wtName, wtHandle] of wtParentHandle.entries()) {
+      if (wtHandle.kind === 'directory') {
+        for await (const [fname, fHandle] of wtHandle.entries()) {
+          if (fHandle.kind !== 'file') continue;
+          if (!/\.(jpg|jpeg|png)$/i.test(fname)) continue;
+          await processFile(fHandle, fname, cat, wtName, menu, area);
+        }
+      } else if (wtHandle.kind === 'file') {
+        if (!/\.(jpg|jpeg|png)$/i.test(wtName)) continue;
+        await processFile(wtHandle, wtName, cat, '', menu, area);
+      }
+    }
+  }
+
+  // 작업분류 폴더 레벨(그 안에 작업구분 폴더들이 있음) 처리
+  async function scanCatLevel(catParentHandle, menu, area) {
+    for await (const [catName, catHandle] of catParentHandle.entries()) {
+      if (catHandle.kind !== 'directory') continue;
+      const cat = (catName === 'Others') ? '' : catName;
+      await scanWtLevel(catHandle, cat, menu, area);
+    }
+  }
+
+  // 예전 구조(작업구역 없이 메뉴 폴더 > 작업구분 폴더 > 작업분류 폴더 순) 호환
+  async function scanOldWtThenCat(wtParentHandle, wtFolder, menu) {
+    for await (const [catName, catHandle] of wtParentHandle.entries()) {
+      if (catHandle.kind !== 'directory') continue;
+      const cat = (catName === 'Others') ? '' : catName;
+      for await (const [subName, subHandle] of catHandle.entries()) {
+        if (subHandle.kind !== 'file') continue;
+        if (!/\.(jpg|jpeg|png)$/i.test(subName)) continue;
+        await processFile(subHandle, subName, cat, wtFolder, menu, '');
+      }
+    }
+  }
+
+  // 메뉴 폴더 하나의 내부를 처리: 새 구조면 작업구역 폴더가, 예전 구조면 작업구분 폴더가 바로 나온다
+  async function scanMenuInner(menuHandle, menu) {
+    for await (const [name, handle] of menuHandle.entries()) {
+      if (handle.kind !== 'directory') continue;
+      if (AREA_FOLDER_NAMES.has(name)) {
+        // 새 구조: 메뉴 > 작업구역 > 작업분류 > 작업구분 > 파일
+        const area = (name === sanitizeFolderName('구역없음')) ? '' : name;
+        await scanCatLevel(handle, menu, area);
+      } else if (WT_FOLDER_NAMES.has(name)) {
+        // 예전 구조: 메뉴 > 작업구분 > 작업분류 > 파일
+        await scanOldWtThenCat(handle, name, menu);
+      } else {
+        // 더 예전 구조: 메뉴 > 작업분류 > 파일
+        const cat = (name === 'Others') ? '' : name;
+        await scanWtLevel(handle, cat, menu, '');
+      }
+    }
+  }
+
+  try {
+    for await (const [name, handle] of dirHandle.entries()) {
+      if (handle.kind === 'directory' && MENU_FOLDER_NAMES.has(name)) {
+        await scanMenuInner(handle, name);
+      } else if (handle.kind === 'directory' && WT_FOLDER_NAMES.has(name)) {
+        // 메뉴 폴더조차 없던 아주 예전 구조: 작업구분 > 작업분류 > 파일
+        await scanOldWtThenCat(handle, name, '');
+      } else if (handle.kind === 'directory') {
+        // 가장 예전 구조: 작업분류 폴더만
+        const cat = (name === 'Others') ? '' : name;
+        for await (const [subName, subHandle] of handle.entries()) {
+          if (subHandle.kind !== 'file') continue;
+          if (!/\.(jpg|jpeg|png)$/i.test(subName)) continue;
+          await processFile(subHandle, subName, cat, '', '', '');
+        }
+      } else if (handle.kind === 'file') {
+        // 루트에 있는 파일도 처리 (이전 버전 호환)
+        if (!/\.(jpg|jpeg|png)$/i.test(name)) continue;
+        await processFile(handle, name, '', '', '', '');
+      }
+    }
+
+    if (added > 0) {
+      photos.sort((a,b) => (b.date+b.created).localeCompare(a.date+a.created));
+      populateDateFilter(); renderSidebar(); renderPhotos(); updateHeader();
+      alert(`✅ ${added}장 새로 불러왔습니다.`);
+    } else {
+      alert('새로 불러올 사진이 없습니다. (이미 모두 로드됨)');
+    }
+  } catch(e) {
+    alert('폴더 스캔 실패: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (scanBtn) scanBtn.disabled = false;
+    updateFolderUI();
+  }
+}
+
+// ── 상태 ────────────────────────────────────────────
+let db, photos = [], pendingFiles = [], selectedFileIndex = 0;
+let selCat = null, selWt = null;
+let selOtherFolder = false; // 사이드바 "기타" 폴더 선택 여부
+// "기타" 폴더 소속 판정: 작업구분(wt)이 신규/수정 어디에도 안 맞는 사진만 기타로 분류한다.
+// 예전엔 작업분류(cat)가 없는 사진도 OR로 같이 기타에 넣었는데, 그러면 wt는 신규/수정에 이미
+// 맞는데 cat만 없는 사진이 "신규(또는 수정)"와 "기타" 양쪽에 동시에 잡혀서 신규+수정+기타 합이
+// 전체보기 숫자보다 커지는 문제가 있었다. 이제 신규/수정/기타는 서로 겹치지 않게(정확히 하나에만
+// 속하게) 만들고, 분류(cat)가 비어있는 사진은 대신 헤더의 "📝 미입력" 필터로 찾을 수 있다.
+function isOtherFolder(p){
+  const w = WT_LABELS_BY_MENU[p.menu||activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const wtFolder = workTypeFolderName(p.wt);
+  return wtFolder!==w.new && wtFolder!==w.mod;
+}
+let batchAbort = false;
+let enabledCats = new Set();
+let currentDetailId = null;
+let currentDetailIndex = -1; // 현재 사진이 필터 목록에서 마지막으로 확인된 위치(수정으로 필터 밖으로 빠졌을 때 다음/이전 이동 기준)
+let detZoom = 1, detPanX = 0, detPanY = 0, detDragging = false;
+let detDragStartX = 0, detDragStartY = 0, detPanStartX = 0, detPanStartY = 0;
+const DET_ZOOM_MIN = 1, DET_ZOOM_MAX = 5;
+let ocrWorker = null, currentOCRAbort = false, currentAnalysisFile = null;
+
+let teams = ['A팀','B팀','C팀','D팀'];
+let areas = ['SCC','U&O'];
+let notePresets = [];
+
+// ── 상위 메뉴 (시공/품질/자재/안전/화기유도) ─────────────
+const MENUS = ['시공','품질','자재','안전','화기/유도'];
+const MENU_THEMES = {
+  '시공':      ['#2f81f7','#58a6ff'],
+  '품질':      ['#27AE60','#58D68D'],
+  '자재':      ['#A0703A','#C9986B'],
+  '안전':      ['#F39C12','#F5B041'],
+  '화기/유도': ['#C0392B','#EC7063']
+};
+// 메뉴별 작업구분 라벨. newPhases/modPhases가 있는 메뉴만 신규/수정 선택 시 해당 하위 단계 드롭다운 표시
+const WT_LABELS_BY_MENU = {
+  '시공':      { new:'신규',       mod:'수정',     newPhases:['진행중','완료'], modPhases:['변경전','변경후'] },
+  '품질':      { new:'신규',       mod:'수정',     modPhases:['변경전','변경후'] },
+  '자재':      { new:'도급',       mod:'사급'   },
+  '안전':      { new:'현장안전점검', mod:'안전용품' },
+  '화기/유도': { new:'화기감시자', mod:'유도원'   }
+};
+// radioValue(신규/수정 라디오의 실제 value)에 해당하는 하위 단계 목록을 반환 (없으면 null)
+function wtPhasesFor(radioValue, w) {
+  if (radioValue === w.new) return w.newPhases || null;
+  if (radioValue === w.mod) return w.modPhases || null;
+  return null;
+}
+const DEFAULT_CATS_시공 = [
+  'DCS Panel','LCP','Junction Box','Field Instrument',
+  'Cable Duct','Cable Tray','Conduit Pipe','Air Pipe',
+  'Hook Up','Stanchion','Support','Connection',
+  'Line Check','Loop Test','Leak Test',
+  'Instrument Calibration','Steam Tracing Tube',
+  'Steam Tracing Insulation','Scaffolding','Others','관리자'
+];
+const DEFAULT_CATS_안전 = ['개인보호구','안전난간','소화기','전기안전','고소작업','위험물보관','비상통로','중장비안전','밀폐공간','낙하물방지','기타'];
+const DEFAULT_CATS_화기유도 = ['용접작업','절단작업','화재감시','가연물제거','방화포','가스누출점검','소화기배치','유도원배치','차량유도','작업구간통제','기타'];
+const DEFAULT_CATS_BY_MENU = {
+  '시공': DEFAULT_CATS_시공, '품질': DEFAULT_CATS_시공, '자재': DEFAULT_CATS_시공,
+  '안전': DEFAULT_CATS_안전, '화기/유도': DEFAULT_CATS_화기유도
+};
+let catsByMenu = {}, enabledCatsByMenu = {};
+let activeMenu = MENUS.indexOf(localStorage.getItem('gallery_active_menu')) !== -1
+  ? localStorage.getItem('gallery_active_menu') : '시공';
+let cats = DEFAULT_CATS_BY_MENU[activeMenu].slice();
+
+const WT_META  = {
+  '신규':          { icon:'🆕', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '진행중':        { icon:'🚧', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '완료':          { icon:'✅', ptCls:'pt-post', bCls:'b-wt-post' },
+  '변경전':        { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  '변경후':        { icon:'✅', ptCls:'pt-post', bCls:'b-wt-post' },
+  '도급':          { icon:'🆕', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '사급':          { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  '현장안전점검':   { icon:'🆕', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '안전용품':      { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  '화기감시자':     { icon:'🆕', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '유도원':        { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  // 사이드바의 "수정" 폴더(변경전/변경후 통합) 배지용
+  '수정':          { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  // 이전 방식(수정-작업전/후)으로 이미 저장된 사진과의 호환용
+  '수정-작업전':    { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
+  '수정-작업후':    { icon:'✅', ptCls:'pt-post', bCls:'b-wt-post' }
+};
+
+function applyMenuTheme(menu){
+  const t = MENU_THEMES[menu] || MENU_THEMES['시공'];
+  document.documentElement.style.setProperty('--ac', t[0]);
+  document.documentElement.style.setProperty('--ac2', t[1]);
+}
+
+function applyWtLabels(){
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  [['upWtNewTxt','upWtModTxt','upPhaseWrap'],['eWtNewTxt','eWtModTxt','ePhaseWrap']].forEach(ids=>{
+    const newEl=document.getElementById(ids[0]), modEl=document.getElementById(ids[1]);
+    if(newEl) newEl.textContent = w.new;
+    if(modEl) modEl.textContent = w.mod;
+  });
+  const upWtNew=document.getElementById('upWtNew'), upWtMod=document.getElementById('upWtMod');
+  if(upWtNew) upWtNew.value = w.new;
+  if(upWtMod) upWtMod.value = w.mod;
+  const eWtNew=document.getElementById('eWtNew'), eWtMod=document.getElementById('eWtMod');
+  if(eWtNew) eWtNew.value = w.new;
+  if(eWtMod) eWtMod.value = w.mod;
+  toggleUpPhase(); toggleEPhase();
+  // 필터바 작업구분 옵션
+  const fWt=document.getElementById('fWt');
+  if(fWt){
+    const cur=fWt.value;
+    let opts=['<option value="">전체 구분</option>'];
+    opts.push(...(w.newPhases||[w.new]).map(v=>`<option>${v}</option>`));
+    opts.push(...(w.modPhases||[w.mod]).map(v=>`<option>${v}</option>`));
+    fWt.innerHTML=opts.join('');
+    fWt.value = cur && [...fWt.options].some(o=>o.value===cur) ? cur : '';
+  }
+  // 일괄수정 모달 작업구분 옵션
+  const beWt=document.getElementById('beWt');
+  if(beWt){
+    let opts=['<option value="">-- 변경 안함 --</option>'];
+    opts.push(...(w.newPhases||[w.new]).map(v=>`<option value="${v}">${v}</option>`));
+    opts.push(...(w.modPhases||[w.mod]).map(v=>`<option value="${v}">${v}</option>`));
+    beWt.innerHTML=opts.join('');
+  }
+}
+function toggleUpPhase(){
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const wrap=document.getElementById('upPhaseWrap');
+  const sel=document.getElementById('upPhase');
+  if(!wrap||!sel)return;
+  const checked=document.querySelector('input[name="upWt"]:checked');
+  const phases=checked?wtPhasesFor(checked.value,w):null;
+  if(phases){
+    sel.innerHTML=phases.map(v=>`<option value="${v}">${v}</option>`).join('');
+    wrap.style.display='';
+  }else{
+    wrap.style.display='none';
+  }
+}
+function toggleEPhase(){
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const wrap=document.getElementById('ePhaseWrap');
+  const sel=document.getElementById('ePhase');
+  if(!wrap||!sel)return;
+  const checked=document.querySelector('input[name="eWt"]:checked');
+  const phases=checked?wtPhasesFor(checked.value,w):null;
+  if(phases){
+    sel.innerHTML=phases.map(v=>`<option value="${v}">${v}</option>`).join('');
+    wrap.style.display='';
+  }else{
+    wrap.style.display='none';
+  }
+}
+function setActiveMenu(menu){
+  if(MENUS.indexOf(menu)===-1)return;
+  activeMenu=menu;
+  localStorage.setItem('gallery_active_menu',menu);
+  cats = catsByMenu[activeMenu] || DEFAULT_CATS_BY_MENU[activeMenu].slice();
+  enabledCats = enabledCatsByMenu[activeMenu] || new Set(cats);
+  document.querySelectorAll('.menu-tab').forEach(btn=>btn.classList.toggle('active',btn.getAttribute('data-menu')===menu));
+  applyMenuTheme(menu);
+  applyWtLabels();
+  selCat=null; selWt=null;
+  populateSelects();
+  populateDateFilter();
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+document.querySelectorAll('.menu-tab').forEach(btn=>btn.classList.toggle('active',btn.getAttribute('data-menu')===activeMenu));
+applyMenuTheme(activeMenu);
+applyWtLabels();
+
+// ── 전체 자동 분류 ────────────────────────────────────
+function openBatch() {
+  batchAbort = false;
+  document.getElementById('batchOptions').style.display = '';
+  document.getElementById('batchProg').style.display = 'none';
+  document.getElementById('batchResult').style.display = 'none';
+  document.getElementById('batchBar').style.width = '0';
+  document.getElementById('batchPercent').textContent = '0%';
+  document.getElementById('batchStartBtn').style.display = '';
+  document.getElementById('batchCancelBtn').textContent = '취소';
+  const catSel=document.getElementById('batchCatFilter');
+  catSel.innerHTML='<option value="">전체 분류</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('batchOverlay').classList.add('show');
+}
+
+async function startBatch() {
+  const mode = document.querySelector('input[name="batchMode"]:checked').value;
+  const catFilter = document.getElementById('batchCatFilter').value;
+  const menuPhotos = photos.filter(p => (p.menu||'시공') === activeMenu);
+  let targets = mode === 'uncat'
+    ? menuPhotos.filter(p => !p.cat || p.cat === 'Others')
+    : menuPhotos;
+  // 작업분류를 지정하면 그 분류(폴더)에 속한 사진으로만 더 좁혀서 재분석한다.
+  // "미분류만"과 같이 쓰면 정의상 대상이 없을 수 있음(미분류 사진엔 분류가 없으므로) — 의도된 동작.
+  if (catFilter) targets = targets.filter(p => (p.cat||'') === catFilter);
+
+  if (targets.length === 0) {
+    alert('분석할 사진이 없습니다.');
+    return;
+  }
+
+  document.getElementById('batchOptions').style.display = 'none';
+  document.getElementById('batchStartBtn').style.display = 'none';
+  document.getElementById('batchCancelBtn').textContent = '중단';
+  document.getElementById('batchProg').style.display = 'block';
+  document.getElementById('batchResult').style.display = 'none';
+  batchAbort = false;
+
+  let updated = 0;
+  const total = targets.length;
+
+  for (let i = 0; i < total; i++) {
+    if (batchAbort) break;
+    const p = targets[i];
+    const pct = Math.round((i / total) * 100);
+    document.getElementById('batchLbl').textContent = `분석 중... ${i + 1} / ${total}장`;
+    document.getElementById('batchPercent').textContent = pct + '%';
+    document.getElementById('batchBar').style.width = pct + '%';
+    document.getElementById('batchSt').textContent = p.name || '';
+
+    try {
+      const cropBlob = await cropWatermarkRegion(p.dataUrl);
+      const worker = await getOCRWorker(() => {});
+      const { data: { text } } = await worker.recognize(cropBlob);
+      const parsed = parseOCRText(text);
+      const oldFields = { tag:p.tag, cat:p.cat, date:p.date, time:p.time, wt:p.wt, area:p.area, note:p.note };
+      let changed = false;
+      if (parsed.cat && parsed.cat !== p.cat) { p.cat = parsed.cat; changed = true; }
+      if (parsed.wt  && parsed.wt  !== p.wt)  { p.wt  = parsed.wt;  changed = true; }
+      if (parsed.tag && !p.tag)                { p.tag = parsed.tag; changed = true; }
+      // 갤러리전송으로 분류 없이 올라온 사진은 날짜/시간도 EXIF가 없으면 "지금 보낸 시각"으로
+      // 잘못 채워져 있으므로, 사진에 찍힌 실제 촬영 날짜/시간(워터마크)으로 바로잡는다.
+      if (parsed.date && parsed.date !== p.date) { p.date = parsed.date; changed = true; }
+      if (parsed.time && parsed.time !== p.time) { p.time = parsed.time; changed = true; }
+      if (parsed.loc  && !p.area)              { p.area = parsed.loc; changed = true; }
+      if (parsed.team && !p.team)              { p.team = parsed.team; changed = true; }
+      if (parsed.note && (!p.note || p.note==='-')) { p.note = parsed.note; changed = true; }
+      if (changed) {
+        // 모바일에서 분류 없이 올라온 사진(갤러리전송)은 여기서 처음 분류가 채워지므로,
+        // 클라우드 메타데이터와 파일명도 함께 맞춰준다(기존 수정 저장과 동일한 동기화 로직 재사용).
+        if (p.cloud_url) await syncEditToCloud(p, oldFields);
+        await savePhotoToDB(p);
+        updated++;
+      }
+    } catch (e) {}
+
+    document.getElementById('batchBar').style.width = Math.round(((i + 1) / total) * 100) + '%';
+    document.getElementById('batchPercent').textContent = Math.round(((i + 1) / total) * 100) + '%';
+  }
+
+  const done = !batchAbort;
+  document.getElementById('batchLbl').textContent = done ? `완료! ${updated}장 분류 업데이트` : '중단됨';
+  if (done) {
+    document.getElementById('batchBar').style.width = '100%';
+    document.getElementById('batchPercent').textContent = '100%';
+  }
+  document.getElementById('batchSt').textContent = '';
+  document.getElementById('batchCancelBtn').textContent = '닫기';
+
+  const res = document.getElementById('batchResult');
+  res.style.display = '';
+  if (updated > 0) {
+    res.style.background = 'rgba(63,185,80,0.06)';
+    res.style.border = '1px solid rgba(63,185,80,0.25)';
+    res.style.color = 'var(--green)';
+    res.innerHTML = `✅ <strong>${updated}장</strong>이 올바른 폴더로 이동되었습니다.` +
+      (batchAbort ? '<br>⚠️ 분석이 중단되어 일부 사진이 처리되지 않았습니다.' : '');
+  } else {
+    res.style.background = 'rgba(100,100,100,0.06)';
+    res.style.border = '1px solid rgba(100,100,100,0.2)';
+    res.style.color = 'var(--tx2)';
+    res.textContent = batchAbort ? '분석이 중단되었습니다.' : '모든 사진이 이미 올바른 폴더에 있습니다.';
+  }
+
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+
+function closeBatch() {
+  batchAbort = true;
+  document.getElementById('batchOverlay').classList.remove('show');
+}
+
+// ── IndexedDB ────────────────────────────────────────
+function initDB() {
+  const req = indexedDB.open('WorkPhotoDB', 2);
+  req.onupgradeneeded = e => {
+    const d = e.target.result;
+    if (!d.objectStoreNames.contains('photos')) {
+      const s = d.createObjectStore('photos', { keyPath: 'id' });
+      s.createIndex('date', 'date');
+      s.createIndex('cat',  'cat');
+    }
+    if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings',{keyPath:'key'});
+  };
+  req.onsuccess = e => { db = e.target.result; loadSettings().then(() => { loadPhotos(); loadFolderHandle(); fetchSettingsFromSupabase(); subscribeSettingsRealtime(); }); };
+}
+function txStore(name,mode='readonly'){ return db.transaction(name,mode).objectStore(name); }
+
+// 예전 세션에 저장된 안전/화기유도 placeholder 기본값이 남아있으면 새 기본값으로 1회 승격 (enabledCatsByMenu도 함께 갱신)
+function fixStaleCategoryDefaults(cbm, ecbm){
+  let changed=false;
+  if(cbm && JSON.stringify(cbm['안전'])===JSON.stringify(['기타'])){
+    cbm['안전']=DEFAULT_CATS_BY_MENU['안전'].slice();
+    if(ecbm) ecbm['안전']=new Set(cbm['안전']);
+    changed=true;
+  }
+  if(cbm && JSON.stringify(cbm['화기/유도'])===JSON.stringify(DEFAULT_CATS_시공)){
+    cbm['화기/유도']=DEFAULT_CATS_BY_MENU['화기/유도'].slice();
+    if(ecbm) ecbm['화기/유도']=new Set(cbm['화기/유도']);
+    changed=true;
+  }
+  if(cbm && JSON.stringify(cbm['자재'])===JSON.stringify(['기타'])){
+    cbm['자재']=DEFAULT_CATS_BY_MENU['자재'].slice();
+    if(ecbm) ecbm['자재']=new Set(cbm['자재']);
+    changed=true;
+  }
+  return changed;
+}
+function initCatsByMenu(d){
+  if (d && d.catsByMenu) {
+    catsByMenu = d.catsByMenu;
+    MENUS.forEach(m => { if (!Array.isArray(catsByMenu[m]) || !catsByMenu[m].length) catsByMenu[m] = DEFAULT_CATS_BY_MENU[m].slice(); });
+  } else {
+    // 메뉴 구분이 없던 이전 버전의 전역 cats가 있으면 시공 목록으로 이어받음
+    const legacy = (d && d.cats && d.cats.length) ? d.cats : DEFAULT_CATS_BY_MENU['시공'];
+    catsByMenu = {};
+    MENUS.forEach(m => { catsByMenu[m] = (m === '시공') ? legacy.slice() : DEFAULT_CATS_BY_MENU[m].slice(); });
+  }
+  if (d && d.enabledCatsByMenu) {
+    enabledCatsByMenu = {};
+    MENUS.forEach(m => { enabledCatsByMenu[m] = new Set((d.enabledCatsByMenu[m] && d.enabledCatsByMenu[m].length) ? d.enabledCatsByMenu[m] : catsByMenu[m]); });
+  } else {
+    const legacyEnabled = (d && d.enabledCats && d.enabledCats.length) ? d.enabledCats : null;
+    enabledCatsByMenu = {};
+    MENUS.forEach(m => { enabledCatsByMenu[m] = new Set((m === '시공' && legacyEnabled) ? legacyEnabled : catsByMenu[m]); });
+  }
+  const migratedStale = fixStaleCategoryDefaults(catsByMenu, enabledCatsByMenu);
+  cats = catsByMenu[activeMenu];
+  enabledCats = enabledCatsByMenu[activeMenu];
+  if(migratedStale) saveSettingsLocal();
+}
+
+function loadSettings() {
+  return new Promise(res => {
+    const r = txStore('settings').get('cfg');
+    r.onsuccess = e => {
+      const d = e.target.result;
+      if (d) {
+        if (d.teams) teams = d.teams;
+        if (d.areas) areas = d.areas;
+        if (d.notePresets) notePresets = d.notePresets;
+      }
+      initCatsByMenu(d);
+      res();
+    };
+    r.onerror = () => { initCatsByMenu(null); res(); };
+  });
+}
+
+// 로컬(IndexedDB)에만 저장 — 원격에서 받아온 설정을 반영할 때 쓰며, 클라우드로 다시 밀어내지 않음
+function saveSettingsLocal() {
+  const enabledObj = {};
+  MENUS.forEach(m => { enabledObj[m] = [...(enabledCatsByMenu[m]||[])]; });
+  txStore('settings','readwrite').put({ key:'cfg', teams, areas, notePresets, catsByMenu, enabledCatsByMenu: enabledObj });
+  populateSelects();
+}
+// 사용자가 직접 설정을 바꿨을 때 호출 — 로컬 저장 + 클라우드로 업로드
+function saveSettings() {
+  saveSettingsLocal();
+  pushSettingsToSupabase();
+}
+
+// ── 모바일 앱과 설정 양방향 자동 동기화 (Supabase) ───────
+async function pushSettingsToSupabase(){
+  if(!sbClient)return;
+  try{
+    const payload={
+      id:'global',
+      cats_by_menu:catsByMenu,
+      areas, teams, note_presets:notePresets,
+      updated_at:new Date().toISOString()
+    };
+    let res=await sbClient.from('app_settings').upsert(payload);
+    // teams/note_presets 컬럼이 DB에 아직 없으면 해당 필드만 빼고 재시도 (cats_by_menu/areas는 항상 반영)
+    const OPTIONAL_COLS=['teams','note_presets'];
+    let attempts=0;
+    while(res.error&&attempts<OPTIONAL_COLS.length){
+      const msg=(res.error.message||'').toLowerCase();
+      const col=OPTIONAL_COLS.find(c=>(c in payload)&&msg.includes(c));
+      if(!col) break;
+      delete payload[col];
+      res=await sbClient.from('app_settings').upsert(payload);
+      attempts++;
+    }
+    if(res.error) console.error('설정 클라우드 동기화 실패',res.error.message);
+  }catch(e){console.error('설정 클라우드 동기화 실패',e);}
+}
+function applyRemoteSettings(data){
+  let changed=false;
+  if(data.cats_by_menu){
+    MENUS.forEach(m=>{
+      if(Array.isArray(data.cats_by_menu[m])&&data.cats_by_menu[m].length){
+        catsByMenu[m]=data.cats_by_menu[m];
+        if(!enabledCatsByMenu[m]) enabledCatsByMenu[m]=new Set();
+        catsByMenu[m].forEach(c=>enabledCatsByMenu[m].add(c));
+        changed=true;
+      }
+    });
+  }
+  if(Array.isArray(data.areas)&&data.areas.length){ areas=data.areas; changed=true; }
+  if(Array.isArray(data.teams)&&data.teams.length){ teams=data.teams; changed=true; }
+  if(Array.isArray(data.note_presets)&&data.note_presets.length){ notePresets=data.note_presets; changed=true; }
+  const fixedStale=fixStaleCategoryDefaults(catsByMenu, enabledCatsByMenu);
+  if(changed||fixedStale){
+    cats = catsByMenu[activeMenu];
+    enabledCats = enabledCatsByMenu[activeMenu];
+    saveSettingsLocal();
+    renderSidebar(); renderPhotos(); updateHeader();
+    if(fixedStale) pushSettingsToSupabase();
+  }
+}
+async function fetchSettingsFromSupabase(){
+  if(!sbClient)return;
+  try{
+    const {data,error}=await sbClient.from('app_settings').select('*').eq('id','global').single();
+    if(error||!data)return;
+    applyRemoteSettings(data);
+  }catch(e){console.error('설정 클라우드 불러오기 실패',e);}
+}
+function subscribeSettingsRealtime(){
+  if(!sbClient||!sbClient.channel)return;
+  sbClient.channel('app_settings_changes_gallery')
+    .on('postgres_changes',{event:'*',schema:'public',table:'app_settings',filter:'id=eq.global'},payload=>{
+      if(payload.new) applyRemoteSettings(payload.new);
+    })
+    .subscribe();
+}
+
+// 예전 동기화 중복 버그로 쌓인 중복 사진을 정리한다(같은 클라우드 사진이 여러 개면 최신 것만 남김).
+// renderPhotos()가 대량의 dataUrl을 한 번에 문자열로 합치다 브라우저 한계를 넘어 죽는 사고를 막기 위해,
+// 렌더링하기 전에 반드시 먼저 실행한다.
+async function dedupePhotosOnLoad(list){
+  const keyOf = p => p.cloud_id != null ? ('id:' + p.cloud_id)
+                   : p.cloud_url ? ('url:' + p.cloud_url)
+                   : ('local:' + (p.name || '') + ':' + (p.tag || '') + ':' + (p.date || ''));
+  const groups = {};
+  list.forEach(p => { const k = keyOf(p); (groups[k] = groups[k] || []).push(p); });
+  const toDeleteIds = new Set();
+  Object.values(groups).forEach(g => {
+    if (g.length <= 1) return;
+    g.sort((a,b) => (b.created||'').localeCompare(a.created||''));
+    g.slice(1).forEach(p => toDeleteIds.add(p.id));
+  });
+  if (toDeleteIds.size === 0) return list;
+  for (const id of toDeleteIds) { await deletePhotoDB(id); }
+  console.warn(`[중복 정리] ${toDeleteIds.size}개의 중복 사진을 삭제했습니다.`);
+  return list.filter(p => !toDeleteIds.has(p.id));
+}
+
+async function loadPhotos() {
+  txStore('photos').getAll().onsuccess = async e => {
+    photos = await dedupePhotosOnLoad(e.target.result || []);
+    photos.sort((a,b) => (b.date+b.created).localeCompare(a.date+a.created));
+    populateSelects();
+    populateDateFilter();
+    renderSidebar();
+    renderPhotos();
+    updateHeader();
+    migrateSigongNewToDone();
+  };
+}
+// 목록 카드의 <img>는 원본 base64 문자열(p.dataUrl, 사진 한 장에 수 MB)을 직접 쓰지 않고
+// Blob URL(수십 바이트짜리 참조)로 변환해서 쓴다 — 사진이 수백 장이면 base64를 그대로
+// html 문자열에 이어붙이다 브라우저 문자열 길이 한계를 넘겨 화면이 통째로 안 그려지는 문제가 있었다.
+const photoImgUrlCache = new Map();
+function dataUrlToBlobUrl(dataUrl){
+  const commaIdx = dataUrl.indexOf(',');
+  const header = dataUrl.slice(0, commaIdx);
+  const base64 = dataUrl.slice(commaIdx + 1);
+  const mimeMatch = header.match(/data:(.*?);base64/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: mime }));
+}
+function getPhotoImgSrc(p){
+  if (!p.dataUrl) return '';
+  let url = photoImgUrlCache.get(p.id);
+  if (url) return url;
+  try { url = dataUrlToBlobUrl(p.dataUrl); } catch(e) { return p.dataUrl; }
+  photoImgUrlCache.set(p.id, url);
+  return url;
+}
+function invalidatePhotoImgCache(id){
+  const url = photoImgUrlCache.get(id);
+  if (url) { URL.revokeObjectURL(url); photoImgUrlCache.delete(id); }
+}
+
+function savePhotoToDB(p)  { invalidatePhotoImgCache(p.id); return new Promise(res=>{ txStore('photos','readwrite').put(p).onsuccess=()=>res(); }); }
+function deletePhotoDB(id) { invalidatePhotoImgCache(id); return new Promise(res=>{ txStore('photos','readwrite').delete(id).onsuccess=()=>res(); }); }
+
+// ── 클라우드(Supabase) 삭제 ───────────────────────────
+// photo_url 예: https://.../storage/v1/object/public/work-photo/{date}/{filename}
+function storagePathFromCloudUrl(url){
+  const marker='/work-photo/';
+  const idx=(url||'').indexOf(marker);
+  if(idx===-1) return null;
+  try{ return decodeURIComponent(url.slice(idx+marker.length).split('?')[0]); }
+  catch(e){ return url.slice(idx+marker.length).split('?')[0]; }
+}
+
+// 예전에 분류/기기번호만 바뀌고 파일명이 안 따라간 사진을, 지금의 분류/기기번호
+// 기준으로 강제로 다시 맞춘다. 파일명은 "현재 등록된 카테고리 중 파일명에 들어있는 것"과
+// "기기번호 패턴"을 각각 찾아서 지금 값으로 교체 — 저장된 이전 값(oldTag/oldCat)에 기대지 않는다.
+async function forceResyncPhoto(){
+  const p = photos.find(x => x.id === currentDetailId); if (!p) return;
+  if(!confirm(`이 사진의 파일명을 현재 분류("${p.cat||'-'}")·기기번호("${p.tag||'-'}") 기준으로 다시 맞출까요?`)) return;
+
+  // 로컬에 캐시된 cloud_url이 이미 옮겨져 있을 수 있으므로, id가 있으면 DB의 실제 현재 값으로 갱신
+  if(p.cloud_id!=null && sbClient){
+    const {data:cur}=await sbClient.from('work_photos').select('photo_url').eq('id',p.cloud_id).single();
+    if(cur && cur.photo_url && cur.photo_url!==p.cloud_url){
+      p.cloud_url=cur.photo_url;
+      p.name=cur.photo_url.split('/').pop().split('?')[0];
+    }
+  }
+  const matchUrl=p.cloud_url; // DB의 기존 photo_url — 파일명이 바뀌어도 이 값으로 행을 찾는다
+
+  if(p.name){
+    const dot=p.name.lastIndexOf('.');
+    let base=dot===-1?p.name:p.name.slice(0,dot);
+    const ext=dot===-1?'':p.name.slice(dot);
+
+    const newCatSeg=sanitizeForFilename(p.cat)||'ETC';
+    let foundCatSeg=null;
+    for(const c of cats){
+      const seg=sanitizeForFilename(c);
+      if(seg && base.includes(seg)){ foundCatSeg=seg; break; }
+    }
+    if(foundCatSeg && foundCatSeg!==newCatSeg) base=base.replace(foundCatSeg,newCatSeg);
+
+    // 기기번호 패턴: "PT-2101"(문자-숫자) 또는 "2121-PV-3302"(숫자-문자-숫자) 둘 다 지원.
+    // '_'도 파일명에서 구분자로 쓰이므로 \b 대신 문자/숫자만 경계로 보는 lookaround를 쓴다
+    // (\b는 '_'를 단어문자로 취급해 "...3302_SCC..."처럼 뒤에 '_'가 오면 매칭이 실패함).
+    const newTagSeg=sanitizeForFilename(p.tag)||'NONAME';
+    const tagM=base.match(/(?<![A-Za-z0-9])(\d{2,6}-[A-Za-z]{1,4}-\d{2,6}[A-Za-z]?|[A-Za-z]{1,6}-?\d{3,8}[A-Za-z]?)(?![A-Za-z0-9])/);
+    if(tagM && sanitizeForFilename(tagM[1])!==newTagSeg) base=base.replace(tagM[1],newTagSeg);
+
+    const newName=base+ext;
+    if(newName!==p.name){
+      if(p.cloud_url && sbClient){
+        const oldPath=storagePathFromCloudUrl(p.cloud_url);
+        if(oldPath){
+          const dir=oldPath.includes('/')?oldPath.slice(0,oldPath.lastIndexOf('/')+1):'';
+          const newPath=dir+newName;
+          try{
+            const {error:moveErr}=await sbClient.storage.from('work-photo').move(oldPath,newPath);
+            if(!moveErr){ p.cloud_url=sbClient.storage.from('work-photo').getPublicUrl(newPath).data.publicUrl; p.name=newName; }
+            else console.warn('[강제 동기화] 파일명 변경 실패:',moveErr.message);
+          }catch(e){ console.warn('[강제 동기화] 파일명 변경 예외:',e); }
+        }
+      }else{
+        p.name=newName;
+      }
+    }
+  }
+
+  if(p.cloud_url && sbClient){
+    const {error}=await sbClient.from('work_photos').update({
+      date:p.date||'', time:p.time||'', tag:p.tag||'',
+      cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
+      note:p.note||'', sender:p.team||'',
+      photo_url:p.cloud_url,
+    }).eq('photo_url',matchUrl);
+    if(error) console.warn('[강제 동기화] 메타데이터 반영 실패:',error.message);
+  }
+
+  await savePhotoToDB(p);
+  openDetail(String(p.id));
+  renderSidebar(); renderPhotos();
+  alert('동기화 완료');
+}
+
+// 서버(Storage) 원본 파일이 유실됐지만(예전 동기화 버그로 rename만 되고 DB 반영이 안 된 경우 등)
+// 이 브라우저에는 로컬 원본(p.dataUrl)이 남아있는 사진을, 지금 화면 값 기준 새 경로로 서버에 다시 올린다.
+// cloud_id가 있으면 기존 행을 update, 없으면(원래 로컬 전용 사진이었으면) 새로 insert한다.
+async function reuploadPhotoToCloud(){
+  const p = photos.find(x => x.id === currentDetailId); if (!p) return;
+  if(!sbClient){ alert('클라우드 연결이 되어 있지 않습니다.'); return; }
+  if(!p.dataUrl){ alert('이 사진은 로컬 원본 이미지가 없어 재전송할 수 없습니다.'); return; }
+  if(!confirm(`이 사진을 지금 값(기기번호 "${p.tag||'-'}"·분류 "${p.cat||'-'}") 기준으로 서버에 다시 올릴까요?`)) return;
+  try{
+    const blob = await (await fetch(p.dataUrl)).blob();
+    const fname = buildWorkFileName(p, Date.now()%100000);
+    const filePath = `${p.date||'nodate'}/${fname}`;
+    const {error:stErr} = await sbClient.storage.from('work-photo').upload(filePath, blob, {contentType:blob.type||'image/jpeg', upsert:true});
+    if(stErr){ alert('업로드 실패: ' + stErr.message); return; }
+    const photoUrl = sbClient.storage.from('work-photo').getPublicUrl(filePath).data.publicUrl;
+    const payload = {
+      date:p.date||'', time:p.time||'', tag:p.tag||'',
+      cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
+      note:p.note||'', sender:p.team||'', menu:p.menu||activeMenu,
+      photo_url:photoUrl,
+    };
+    if(p.cloud_id!=null){
+      const {error:dbErr} = await sbClient.from('work_photos').update(payload).eq('id', p.cloud_id);
+      if(dbErr){ alert('서버 반영 실패: ' + dbErr.message); return; }
+    }else{
+      const {data:inserted, error:dbErr} = await sbClient.from('work_photos').insert(payload).select();
+      if(dbErr){ alert('서버 반영 실패: ' + dbErr.message); return; }
+      p.cloud_id = (inserted && inserted[0] && inserted[0].id!=null) ? inserted[0].id : null;
+    }
+    p.cloud_url = photoUrl;
+    p.name = fname;
+    await savePhotoToDB(p);
+    openDetail(String(p.id));
+    renderSidebar(); renderPhotos();
+    alert('✅ 서버로 재전송 완료되었습니다.');
+  }catch(e){
+    console.error('[서버 재전송 실패]', e);
+    alert('전송 실패: ' + e.message);
+  }
+}
+
+// work-shoot의 sanitizeForFilename과 동일한 규칙 — 파일명 속 기기번호 세그먼트를 정확히 찾아 바꾸기 위함
+function sanitizeForFilename(str){
+  return str?String(str).trim()
+    .replace(/[^\x00-\x7F]/g,"")
+    .replace(/[\\\/:*?"<>|&]/g,"")
+    .replace(/\s+/g,"_")
+    .replace(/^[_\-]+|[_\-]+$/g,"")
+    .slice(0,30):"";
+}
+
+// 갤러리에서 수정 저장 시 클라우드(Supabase)에도 반영. 실패해도 로컬 저장은 이미 끝난 뒤라
+// 조용히 콘솔 경고만 남기고 넘어간다(오프라인 편집을 막지 않기 위함).
+// oldFields: 수정 전 {tag,cat,date,time,wt,area,note} 스냅샷 — 파일명에 반영되는 항목 중
+// 하나라도 바뀌었으면 파일명을 지금 값 기준으로 통째로 새로 만들어 바꾼다.
+async function syncEditToCloud(p, oldFields){
+  if(!p.cloud_url || !sbClient) return;
+  try{
+    // 로컬에 캐시된 cloud_url이 실제로는 이미 다른 곳으로 옮겨져 있을 수 있다(다른 세션/기기에서
+    // 수정, 또는 이전 rename이 DB만 반영되고 로컬엔 안 남은 경우) — id가 있으면 DB에서 지금
+    // 진짜 photo_url을 다시 읽어와 그 값을 기준으로 삼는다. move() "Object not found" 방지.
+    if(p.cloud_id!=null){
+      const {data:cur}=await sbClient.from('work_photos').select('photo_url').eq('id',p.cloud_id).single();
+      if(cur && cur.photo_url && cur.photo_url!==p.cloud_url){
+        p.cloud_url=cur.photo_url;
+        p.name=cur.photo_url.split('/').pop().split('?')[0];
+      }
+    }
+    const matchUrl=p.cloud_url; // DB의 기존 photo_url — 파일명이 바뀌어도 이 값으로 행을 찾는다
+    const nameFields=['tag','cat','date','time','wt','area','note'];
+    const contentChanged = oldFields && nameFields.some(k=>p[k]!==oldFields[k]);
+    if(contentChanged && p.name){
+      const newName=buildWorkFileName(p, Date.now()%100000);
+      const oldPath=storagePathFromCloudUrl(p.cloud_url);
+      if(oldPath){
+        const dir=oldPath.includes('/')?oldPath.slice(0,oldPath.lastIndexOf('/')+1):'';
+        const newPath=dir+newName;
+        const {error:moveErr}=await sbClient.storage.from('work-photo').move(oldPath,newPath);
+        if(!moveErr){
+          p.cloud_url=sbClient.storage.from('work-photo').getPublicUrl(newPath).data.publicUrl;
+          p.name=newName;
+        }else{
+          console.warn('[클라우드 동기화] 파일명 변경 실패, 메타데이터만 반영:',moveErr.message);
+        }
+      }
+    }
+    const {error}=await sbClient.from('work_photos').update({
+      date:p.date||'', time:p.time||'', tag:p.tag||'',
+      cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
+      note:p.note||'', sender:p.team||'',
+      photo_url:p.cloud_url,
+    }).eq('photo_url',matchUrl);
+    if(error) console.warn('[클라우드 동기화] 메타데이터 반영 실패:',error.message);
+  }catch(e){ console.warn('[클라우드 동기화] 예외:',e); }
+}
+
+// "✏️ 일괄 수정"이 syncEditToCloud()를 호출하지 않던 버그(수정판 배포 전)로 인해 로컬(IndexedDB)에만
+// 반영되고 서버(Supabase)에는 안 올라간 수정 내용을 한 번에 복구하기 위한 수동 재동기화 버튼.
+// oldFields를 안 넘기면 syncEditToCloud가 파일명 변경(스토리지 move) 없이 메타데이터만 올린다.
+async function resyncAllToCloud(){
+  if(!sbClient){ alert('클라우드 연결이 되어 있지 않습니다.'); return; }
+  const targets = photos.filter(p => p.cloud_url);
+  if(!targets.length){ alert('클라우드와 연결된 사진이 없습니다.'); return; }
+  if(!confirm(`클라우드에 연결된 사진 ${targets.length}장의 현재 값(기기번호/분류/작업구역/날짜/특이사항 등)을 서버로 다시 올릴까요?\n이 브라우저에서만 수정되고 서버에 반영 안 된 내용을 복구하는 용도입니다.`)) return;
+  const btn = document.getElementById('resyncAllBtn');
+  if(btn) btn.disabled = true;
+  for(let i=0;i<targets.length;i++){
+    if(btn) btn.textContent = `⏳ 재동기화 중 (${i+1}/${targets.length})...`;
+    await syncEditToCloud(targets[i], null);
+  }
+  if(btn){ btn.disabled = false; btn.textContent = '♻️ 로컬 수정 내용 서버로 재동기화'; }
+  alert(`✅ ${targets.length}장 서버 재동기화 완료`);
+}
+
+// 시공에 진행중/완료 하위구분을 새로 도입하면서 정리가 필요한 시공 사진들을 자동으로
+// "완료"로 일괄 전환한다: (1) 예전 방식으로 "신규"라고만 저장된 사진, (2) 분류(카테고리)는
+// 있지만 작업구분이 신규/수정 어느 쪽에도 안 걸려 "기타" 폴더에 갇힌 사진(작업구분 인식
+// 실패 등). 전환 대상이 없으면 즉시 끝나므로 앱을 열 때마다, 동기화할 때마다 호출해도
+// 안전(멱등)하다. 다만 앱을 연 직후 곧바로 "☁️ 동기화"를 누르는 등 두 호출이 겹치면 같은
+// 사진을 동시에 처리하려다 파일명 변경(storage.move)이 충돌할 수 있어, 락으로 막는다.
+let migratingSigong = false;
+async function migrateSigongNewToDone(){
+  if (migratingSigong) return;
+  migratingSigong = true;
+  try {
+    const targets = photos.filter(p => {
+      if ((p.menu||'시공') !== '시공') return false;
+      if (p.wt === '신규') return true;
+      const f = workTypeFolderName(p.wt);
+      return !!p.cat && f !== '신규' && f !== '수정';
+    });
+    if(!targets.length) return;
+    console.log(`[마이그레이션] 시공 사진 ${targets.length}장을 "완료"로 일괄 전환합니다.`);
+    for(const p of targets){
+      const oldFields = { tag:p.tag, cat:p.cat, date:p.date, time:p.time, wt:p.wt, area:p.area, note:p.note };
+      p.wt = '완료';
+      await savePhotoToDB(p);
+      await syncEditToCloud(p, oldFields);
+    }
+    renderSidebar(); renderPhotos(); updateHeader();
+    console.log('[마이그레이션] 완료.');
+  } finally {
+    migratingSigong = false;
+  }
+}
+
+// ── 드래그 앤 드롭 ───────────────────────────────────
+let dragCnt = 0;
+document.addEventListener('dragenter', e => { e.preventDefault(); if(++dragCnt===1) document.getElementById('dropOverlay').classList.add('active'); });
+document.addEventListener('dragleave', e => { e.preventDefault(); if(--dragCnt===0) document.getElementById('dropOverlay').classList.remove('active'); });
+document.addEventListener('dragover',  e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault(); dragCnt=0;
+  document.getElementById('dropOverlay').classList.remove('active');
+  if(e.dataTransfer.files.length){ openUpload(); setTimeout(()=>handleFiles(e.dataTransfer.files),80); }
+});
+
+// ── 사이드바 ─────────────────────────────────────────
+let sbOpenWt = null; // 사이드바에서 현재 펼쳐진 작업구분 폴더
+
+function renderSidebar() {
+  document.getElementById('sbAll').classList.toggle('sel', selCat === null && selWt === null && !selOtherFolder);
+  const menuPhotos = photos.filter(p => (p.menu||'시공') === activeMenu);
+  document.getElementById('sbAllCnt').textContent = menuPhotos.length;
+
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const wtFolders = [w.new, w.mod];
+  const enabledList = cats.filter(c => enabledCats.has(c));
+  const otherCount = menuPhotos.filter(isOtherFolder).length;
+
+  const list = document.getElementById('sbList');
+  list.innerHTML = wtFolders.map(wt => {
+    const wtPhotos = menuPhotos.filter(p => workTypeFolderName(p.wt) === wt);
+    const isOpen = sbOpenWt === wt;
+    const sel = selWt === wt && selCat === null;
+    const dropdown = isOpen ? `
+      <select class="sb-cat-dropdown" onchange='selectCatUnderWt(${J(wt)}, this.value)'>
+        <option value="">-- 분류 전체 --</option>
+        ${enabledList.map(c => {
+          const cnt = wtPhotos.filter(p => (p.cat||'Others') === c).length;
+          return `<option value="${c}"${selCat===c?' selected':''}>${c}${cnt?` (${cnt})`:''}</option>`;
+        }).join('')}
+      </select>` : '';
+    return `<div class="sb-wt-group">
+      <div class="sb-cat${sel?' sel':''}" onclick='toggleWtFolder(${J(wt)})'>
+        <span class="sb-cat-ico">📁</span>
+        <span class="sb-cat-nm">${wt}</span>
+        ${wtPhotos.length?`<span class="sb-cnt has">${wtPhotos.length}</span>`:''}
+        <span class="sb-caret">${isOpen?'▾':'▸'}</span>
+      </div>
+      ${dropdown}
+    </div>`;
+  }).join('') + `
+    <div class="sb-wt-group">
+      <div class="sb-cat${selOtherFolder?' sel':''}" onclick='toggleOtherFolder()'>
+        <span class="sb-cat-ico">📁</span>
+        <span class="sb-cat-nm">기타</span>
+        ${otherCount?`<span class="sb-cnt has">${otherCount}</span>`:''}
+      </div>
+    </div>`;
+}
+
+function J(v){ return JSON.stringify(v); }
+
+function selectAllCat() {
+  selCat = null; selWt = null; sbOpenWt = null; selOtherFolder = false;
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+function toggleWtFolder(wt) {
+  sbOpenWt = (sbOpenWt === wt) ? null : wt;
+  selWt = wt; selCat = null; selOtherFolder = false;
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+function selectCatUnderWt(wt, cat) {
+  selWt = wt;
+  selCat = cat || null;
+  selOtherFolder = false;
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+function toggleOtherFolder() {
+  // 신규/수정 폴더와 동일하게, 다시 눌러도 계속 이 폴더에 머문다 — "전체 보기"를 눌러야만 빠져나옴.
+  selOtherFolder = true;
+  selCat = null; selWt = null; sbOpenWt = null;
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+
+// ── 기기번호(TAG NO) 중복 확인 ─────────────────────────
+function normTag(t){ return (t||'').trim(); }
+function getDuplicateTagSet(){
+  const counts = {};
+  photos.forEach(p=>{
+    const t = normTag(p.tag);
+    if(!t || t==='-') return;
+    counts[t] = (counts[t]||0)+1;
+  });
+  return new Set(Object.keys(counts).filter(t=>counts[t]>1));
+}
+let dupFilterOn = false;
+let cloudFilterOn = false;
+function toggleCloudFilter(){
+  cloudFilterOn = !cloudFilterOn;
+  document.getElementById('cloudFilterBtn').textContent = cloudFilterOn ? '☁️ 전체 보기' : '☁️ 클라우드만';
+  renderPhotos();
+}
+function toggleDupFilter(){
+  dupFilterOn = !dupFilterOn;
+  if(dupFilterOn){ selCat=null; selWt=null; incompleteFilterOn=false; }
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+function updateDupBadge(){
+  const btn = document.getElementById('dupFilterBtn');
+  if(!btn) return;
+  const dupSet = getDuplicateTagSet();
+  const count = photos.filter(p=>dupSet.has(normTag(p.tag))).length;
+  if(count>0){
+    btn.style.display='';
+    btn.textContent = dupFilterOn ? '✕ 중복 보기 해제' : `⚠️ 중복 ${count}`;
+  } else {
+    btn.style.display='none';
+    if(dupFilterOn){ dupFilterOn=false; }
+  }
+}
+
+// ── 작업분류·기기번호·작업구역·팀명 미입력 확인 ─────────
+function isIncomplete(p){
+  return !p.cat || p.cat==='Others' || !normTag(p.tag) || normTag(p.tag)==='-' || !p.area || !p.team;
+}
+let incompleteFilterOn = false;
+function toggleIncompleteFilter(){
+  incompleteFilterOn = !incompleteFilterOn;
+  if(incompleteFilterOn){ selCat=null; selWt=null; dupFilterOn=false; }
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+function updateIncompleteBadge(){
+  const btn = document.getElementById('incompleteFilterBtn');
+  if(!btn) return;
+  const count = photos.filter(isIncomplete).length;
+  if(count>0){
+    btn.style.display='';
+    btn.textContent = incompleteFilterOn ? '✕ 미입력 보기 해제' : `📝 미입력 ${count}`;
+  } else {
+    btn.style.display='none';
+    if(incompleteFilterOn){ incompleteFilterOn=false; }
+  }
+}
+
+// ── 사진 그리드 ──────────────────────────────────────
+function getFiltered() {
+  const search = document.getElementById('fSearch').value.toLowerCase().trim();
+  if(dupFilterOn){
+    const dupSet = getDuplicateTagSet();
+    return photos
+      .filter(p => dupSet.has(normTag(p.tag)) && (!search || (p.tag||'').toLowerCase().includes(search)) && (!cloudFilterOn || !!p.cloud_url))
+      // 같은 TAG NO끼리 모아서 보여줘야 중복 비교가 쉬우므로 기기번호로 먼저 묶고, 같은 번호 안에서는 최신순
+      .sort((a,b) => normTag(a.tag).localeCompare(normTag(b.tag)) || (b.date+b.created).localeCompare(a.date+a.created));
+  }
+  if(incompleteFilterOn){
+    return photos
+      .filter(p => isIncomplete(p) && (!search || (p.tag||'').toLowerCase().includes(search)) && (!cloudFilterOn || !!p.cloud_url))
+      .sort((a,b) => (b.date+b.created).localeCompare(a.date+a.created));
+  }
+  const date   = document.getElementById('fDate').value;
+  const team   = document.getElementById('fTeam').value;
+  const wt     = document.getElementById('fWt').value;
+  return photos.filter(p =>
+    (p.menu||'시공') === activeMenu &&
+    (!selOtherFolder || isOtherFolder(p)) &&
+    (selOtherFolder || selCat === null || (p.cat||'Others') === selCat) &&
+    (selOtherFolder || selWt === null || workTypeFolderName(p.wt) === selWt) &&
+    (!date   || p.date === date) &&
+    (!team   || p.team === team) &&
+    (!wt     || p.wt   === wt) &&
+    (!search || (p.tag||'').toLowerCase().includes(search)) &&
+    (!cloudFilterOn || !!p.cloud_url)
+  );
+}
+
+function renderPhotos() {
+  updateDupBadge();
+  updateIncompleteBadge();
+  const filtered = getFiltered();
+  let base;
+  if(dupFilterOn){
+    const dupSet = getDuplicateTagSet();
+    base = photos.filter(p=>dupSet.has(normTag(p.tag))).length;
+  } else if(incompleteFilterOn){
+    base = photos.filter(isIncomplete).length;
+  } else {
+    const menuPhotosForCount = photos.filter(p => (p.menu||'시공') === activeMenu);
+    base = selCat === null && selWt === null ? menuPhotosForCount.length
+         : selCat === null ? menuPhotosForCount.filter(p=>workTypeFolderName(p.wt)===selWt).length
+         : selWt  === null ? menuPhotosForCount.filter(p=>(p.cat||'Others')===selCat).length
+         : menuPhotosForCount.filter(p=>(p.cat||'Others')===selCat&&workTypeFolderName(p.wt)===selWt).length;
+  }
+  document.getElementById('fCount').textContent = filtered.length !== base
+    ? `${filtered.length} / ${base}장` : `${base}장`;
+  const vc = document.getElementById('viewContent');
+  vc.className = selMode ? 'sel-mode' : '';
+  if (!filtered.length) {
+    const msg = base
+      ? '<strong>검색 결과 없음</strong><br>조건을 변경해 보세요.'
+      : (selCat
+        ? `<strong>${selCat}</strong><br>사진이 없습니다. + 사진 추가 버튼으로 업로드하세요.`
+        : '<strong>사진이 없습니다</strong><br>사진을 드래그하거나 + 사진 추가를 클릭하세요.');
+    vc.innerHTML = `<div class="empty"><div class="ei">${base?'🔍':'📂'}</div><p>${msg}</p></div>`;
+    return;
+  }
+  const showCatHeader = selCat === null && !selOtherFolder && !dupFilterOn && !incompleteFilterOn;
+  let html = '';
+  if (showCatHeader) {
+    const groups = {};
+    filtered.forEach(p => { const k=p.cat||'Others'; if(!groups[k])groups[k]=[]; groups[k].push(p); });
+    const sortedKeys = Object.keys(groups).sort((a,b)=>(cats.indexOf(a)<0?999:cats.indexOf(a))-(cats.indexOf(b)<0?999:cats.indexOf(b)));
+    sortedKeys.forEach(k => {
+      html += `<div style="margin-bottom:6px;margin-top:14px;font-size:0.75rem;font-weight:700;color:var(--tx2);">${k} <span style="font-weight:400;color:var(--tx3);">${groups[k].length}장</span></div>`;
+      html += `<div class="photo-grid" style="margin-bottom:4px;">${groups[k].map(p=>photoCard(p)).join('')}</div>`;
+    });
+  } else {
+    html = `<div class="photo-grid">${filtered.map(p=>photoCard(p)).join('')}</div>`;
+  }
+  vc.innerHTML = html;
+}
+
+function photoCard(p) {
+  const m = WT_META[p.wt]||{icon:'',bCls:''};
+  const sid = String(p.id);
+  const isSel = selectedIds.has(sid);
+  return `<div class="photo-card${isSel?' selected':''}" data-photoid="${sid}" onclick='openDetail(${J(sid)})'>
+    <input type="checkbox" class="pc-cb" data-id="${sid}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleSelect(${J(sid)})">
+    <img src="${getPhotoImgSrc(p)}" alt="${p.name||''}" loading="lazy">
+    <button class="pc-dl-btn" onclick="event.stopPropagation();downloadPhoto(${J(sid)})" title="다운로드">⬇</button>
+    <div class="pc-body">
+      ${selCat===null?`<div class="pc-cat">${p.cat||'Others'}</div>`:''}
+      <div class="pc-date">${p.date}${p.time?' · '+p.time:''}</div>
+      <div class="pc-tag">${p.tag||'—'}</div>
+      <div class="pc-badges">
+        ${p.wt?`<span class="badge ${m.bCls}">${m.icon} ${p.wt}</span>`:''}
+        ${p.team?`<span class="badge b-team">${p.team}</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function downloadPhoto(id) {
+  const p = id
+    ? photos.find(x => String(x.id) === String(id))
+    : photos.find(x => x.id === currentDetailId);
+  if (!p) return;
+  const a = document.createElement('a');
+  a.href = p.dataUrl;
+  a.download = p.name || ('WORK_' + (p.date||'nodate') + '_' + (p.tag||'NOTAG') + '.jpg');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ── 헤더 브레드크럼 ──────────────────────────────────
+function updateHeader() {
+  const el = document.getElementById('hdrCrumb');
+  const menuCount = photos.filter(p => (p.menu||'시공') === activeMenu).length;
+  if (selOtherFolder) { el.innerHTML = `<span class="cc">📁 기타</span>`; return; }
+  if (!selCat) { el.innerHTML = `<span class="cc">전체 사진</span><span class="cs">&nbsp;총 ${menuCount}장</span>`; return; }
+  const m = selWt ? (WT_META[selWt]||{icon:'📷'}) : null;
+  el.innerHTML = `<span class="cc">${selCat}</span>` +
+    (selWt ? `<span class="cs">›</span><span class="cc">${m.icon} ${selWt}</span>` : '');
+}
+
+// ── EXIF 파서 ─────────────────────────────────────────
+function readExifDate(file) {
+  return new Promise(res => {
+    const fr = new FileReader();
+    fr.onload = ev => {
+      try {
+        const buf = ev.target.result;
+        const dv  = new DataView(buf);
+        if (dv.getUint16(0) !== 0xFFD8) return res(null);
+        let off = 2;
+        while (off < buf.byteLength - 4) {
+          const marker = dv.getUint16(off); off += 2;
+          const len    = dv.getUint16(off); off += 2;
+          if (marker === 0xFFE1) {
+            const exifStr = String.fromCharCode(...new Uint8Array(buf, off, 6));
+            if (!exifStr.startsWith('Exif')) { off += len-2; continue; }
+            const tiffOff = off + 6;
+            const le = dv.getUint16(tiffOff) === 0x4949;
+            const rd16 = o => le ? dv.getUint16(tiffOff+o,true) : dv.getUint16(tiffOff+o);
+            const rd32 = o => le ? dv.getUint32(tiffOff+o,true) : dv.getUint32(tiffOff+o);
+            const ifd0 = rd32(4);
+            const n0   = rd16(ifd0);
+            let exifIFD = 0;
+            for (let i=0;i<n0;i++){
+              const e=ifd0+2+i*12;
+              const tag=rd16(e);
+              if (tag===0x8769) exifIFD=rd32(e+8);
+              if (tag===0x0132){
+                const s=new Uint8Array(buf,tiffOff+rd32(e+8),19);
+                return res(String.fromCharCode(...s));
+              }
+            }
+            if (exifIFD) {
+              const ne=rd16(exifIFD);
+              for (let i=0;i<ne;i++){
+                const e=exifIFD+2+i*12;
+                if (rd16(e)===0x9003){
+                  const s=new Uint8Array(buf,tiffOff+rd32(e+8),19);
+                  return res(String.fromCharCode(...s));
+                }
+              }
+            }
+            return res(null);
+          }
+          if ((marker & 0xFF00) !== 0xFF00) break;
+          off += len-2;
+        }
+      } catch(e){}
+      res(null);
+    };
+    fr.readAsArrayBuffer(file.slice(0,65536));
+  });
+}
+
+// ── Tesseract OCR ────────────────────────────────────
+const TESS_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+async function loadTesseract() {
+  if (window.Tesseract) return;
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src=TESS_CDN;
+    s.onload=res; s.onerror=rej; document.head.appendChild(s);
+  });
+}
+async function getOCRWorker(onProgress) {
+  if (ocrWorker) return ocrWorker;
+  await loadTesseract();
+  ocrWorker = await Tesseract.createWorker(['kor','eng'],1,{logger:m=>{if(m.status==='recognizing text')onProgress(m.progress);}});
+  return ocrWorker;
+}
+
+// 워터마크는 항상 사진 우측 하단 구석의 작은 영역이라, 원본 전체를 그대로 OCR에 넣으면
+// 큰 사진(산업 현장 배경) 속에서 작은 글자를 못 찾아 인식률이 낮다. 우측 하단만 잘라서
+// OCR 대상으로 삼으면 인식률과 속도가 크게 개선된다.
+function cropWatermarkRegion(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const W=img.naturalWidth, H=img.naturalHeight;
+      const cropW=Math.round(W*0.55), cropH=Math.round(H*0.4);
+      const sx=W-cropW, sy=H-cropH;
+      const cv=document.createElement('canvas');
+      cv.width=cropW; cv.height=cropH;
+      const ctx=cv.getContext('2d');
+      ctx.drawImage(img, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+      cv.toBlob(b=>b?resolve(b):reject(new Error('crop toBlob 실패')), 'image/jpeg', 0.92);
+    };
+    img.onerror=()=>reject(new Error('이미지 로드 실패'));
+    img.src=dataUrl;
+  });
+}
+
+// ── OCR 텍스트 파서 ──────────────────────────────────
+function parseOCRText(text) {
+  const r={}, t=text.replace(/\r/g,'');
+  // 워터마크 줄 순서는 항상 고정이다: 1번째 줄=작업분류(+구분), 2번째 줄=기기번호, 3번째 줄=작업구역...
+  // (work-shoot renderCanvas의 lines=[label, tag, loc, ...] 순서와 동일). "TAG:" 같은 라벨이
+  // 찍히지 않아서 예전엔 크롭 영역 전체 텍스트에서 아무 데나 그 모양이면 잡았는데, 그러다 보니
+  // 다른 줄(분류·구역·팀명 등)의 오독까지 기기번호로 잘못 잡혀 서로 다른 사진이 같은 기기번호로
+  // 채워지는(=가짜 중복) 문제가 있었다. 2번째 줄에서 우선 찾아 정확도를 높인다.
+  const tagPat=/([A-Za-z]{1,4}[-_]?\d{3,6}[A-Za-z]?)/;
+  const lines=t.split('\n').map(l=>l.trim()).filter(Boolean);
+  let tagM = lines[1] ? lines[1].match(tagPat) : null;
+  if(!tagM) tagM=t.match(/(?:TAG|기기\s*번호)\s*[:\s]+([A-Za-z]{1,4}[-_]?\d{3,6}[A-Za-z]?)/i)||t.match(/\b([A-Z]{1,4}-\d{3,6}[A-Z]?)\b/);
+  if(tagM) r.tag=tagM[1].trim().toUpperCase();
+  const dateM=t.match(/(\d{4})[-:/](\d{2})[-:/](\d{2})/);
+  if(dateM) r.date=`${dateM[1]}-${dateM[2]}-${dateM[3]}`;
+  const timeM=t.match(/(\d{1,2})[:\s시](\d{2})(?:[:\s분]|$)/m)||t.match(/(\d{2}):(\d{2}):\d{2}/);
+  if(timeM) r.time=`${timeM[1].padStart(2,'0')}:${timeM[2]}`;
+  if(/변경\s*후/.test(t)) r.wt='변경후';
+  else if(/변경\s*전/.test(t)) r.wt='변경전';
+  else if(/완료/.test(t)) r.wt='완료';
+  else if(/진행\s*중/.test(t)) r.wt='진행중';
+  // 아래 두 줄은 예전 방식(수정-작업전/후)으로 이미 찍힌 워터마크와의 호환용
+  else if(/수정.{0,2}작업.{0,2}후/.test(t)) r.wt='수정-작업후';
+  else if(/수정.{0,2}작업.{0,2}전/.test(t)) r.wt='수정-작업전';
+  else if(/신규/.test(t)) r.wt='신규';
+  for(const cat of cats){if(t.includes(cat)){r.cat=cat;break;}}
+  for(const a of areas){if(t.includes(a)){r.loc=a;break;}}
+for(const tm of teams){if(t.includes(tm)){r.team=tm;break;}}
+  if(!r.team){const tm=t.match(/([A-Z가-힣]\s*팀)/);if(tm)r.team=tm[1].replace(/\s/g,'');}
+  const noteM=t.match(/특이\s*사항\s*[:\s：]+(.+)/m);
+  if(noteM){const v=noteM[1].trim();if(v&&v!=='-'&&v!=='없음'&&v!=='N/A')r.note=v;}
+  return r;
+}
+
+// ── 파일명 파서 ──────────────────────────────────────
+function parseFilename(filename) {
+  const base = filename.replace(/\.[^.]+$/, '');
+  const r = {};
+
+  const tagM = base.match(/\b([A-Z]{1,4}-?\d{3,6}[A-Z]?)\b/i);
+  if (tagM) r.tag = tagM[1].toUpperCase().replace(/([A-Z]+)(\d)/, '$1-$2');
+
+for (const tm of teams) { if (base.includes(tm)) { r.team = tm; break; } }
+  if (!r.team) { const tm = base.match(/([A-Z가-힣]\s*팀)/); if (tm) r.team = tm[1].replace(/\s/g,''); }
+
+  let note = base
+    .replace(/[A-Z]{1,4}-?\d{3,6}[A-Z]?/gi, '')
+.replace(new RegExp(teams.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g'), '')
+    .replace(/[A-Z가-힣]\s*팀/gi, '')
+    .replace(/신규|수정.?작업.?전|수정.?작업.?후/g, '')
+    .replace(/[-_\s]+/g, ' ').trim();
+  if (note.length >= 2) r.note = note;
+
+  return r;
+}
+
+// ── 업로드 모달 ──────────────────────────────────────
+function selectPreviewFile(index) {
+  const prev = selectedFileIndex;
+  selectedFileIndex = index;
+  document.querySelectorAll('#upList .up-list-item').forEach((el,i) => el.classList.toggle('sel', i===index));
+  const file = pendingFiles[index];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('upZone').innerHTML =
+      `<img src="${ev.target.result}" style="max-height:110px;max-width:100%;border-radius:6px;object-fit:contain;display:block;margin:0 auto 6px;">
+       <div style="font-size:0.67rem;color:var(--tx3);">클릭하여 파일 변경</div>`;
+  };
+  reader.readAsDataURL(file);
+  if (prev !== index) runFileAnalysis(file);
+}
+
+const UP_ZONE_INIT = `<div class="up-zone-ico">📂</div>
+      <div class="up-zone-txt">클릭하거나 파일을 드래그</div>
+      <div class="up-zone-sub">JPG, PNG, HEIC 지원 · 여러 장 선택 가능</div>`;
+
+function openPhotoSheet() {
+  // file://로 직접 연 경우(이 PC)엔 127.0.0.1, work-log 서버(/gallery/)로 접속한 경우엔
+  // 지금 접속한 것과 같은 호스트(사무실 다른 PC에서 접속했을 수도 있음)를 그대로 사용.
+  var host = (location.protocol === 'file:') ? '127.0.0.1' : location.hostname;
+  window.open('http://' + host + ':5183/', '_blank');
+}
+
+function openUpload() {
+  pendingFiles=[]; selectedFileIndex=0;
+  document.getElementById('upList').innerHTML='';
+  document.getElementById('upZone').innerHTML=UP_ZONE_INIT;
+  document.getElementById('upProg').style.display='none';
+  document.getElementById('ocrBar').style.display='none';
+  document.getElementById('fileInput').value='';
+  document.getElementById('upDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('upTime').value=new Date().toTimeString().slice(0,5);
+  ['upTag','upNote'].forEach(id=>document.getElementById(id).value='');
+  if(selCat) document.getElementById('upCat').value=selCat;
+  document.getElementById('upWtNew').checked=true;
+  toggleUpPhase();
+  ['upTag','upNote','upDate','upTime','upCat','upArea','upTeam','wtRg'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.dataset.me='';
+  });
+  ['tagBadge','dateBadge','timeBadge','wtBadge','catBadge','teamBadge','noteBadge'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('upOverlay').classList.add('show');
+}
+function closeUpload() {
+  currentOCRAbort=true;
+  document.getElementById('upOverlay').classList.remove('show');
+}
+
+async function handleFiles(files) {
+  if(!files||!files.length) return;
+  pendingFiles = Array.from(files);
+  document.getElementById('upList').innerHTML = pendingFiles.map((f,i)=>
+    `<div class="up-list-item" onclick="selectPreviewFile(${i})">📄 ${f.name} (${(f.size/1024).toFixed(0)}KB)</div>`
+  ).join('');
+  selectPreviewFile(0);
+}
+
+function resetAutoFills() {
+  [['upTag','tagBadge'],['upDate','dateBadge'],['upTime','timeBadge'],
+   ['upNote','noteBadge'],['upCat','catBadge'],['upTeam','teamBadge'],['upArea',null]
+  ].forEach(([id,badge])=>{
+    const el=document.getElementById(id); if(el&&!el.dataset.me) el.value='';
+    if(badge) document.getElementById(badge).style.display='none';
+  });
+  if(!document.getElementById('wtRg').dataset.me){
+    document.getElementById('upWtNew').checked=true;
+    toggleUpPhase();
+    document.getElementById('wtBadge').style.display='none';
+  }
+}
+
+async function runFileAnalysis(file) {
+  currentOCRAbort=true;
+  await new Promise(r=>setTimeout(r,30));
+  currentOCRAbort=false;
+  currentAnalysisFile=file;
+
+  resetAutoFills();
+
+  const fnP=parseFilename(file.name);
+  if(fnP.tag  &&!document.getElementById('upTag').dataset.me)  {document.getElementById('upTag').value=fnP.tag;  document.getElementById('tagBadge').style.display='';}
+  if(fnP.team &&!document.getElementById('upTeam').dataset.me) {document.getElementById('upTeam').value=fnP.team; document.getElementById('teamBadge').style.display='';}
+  if(fnP.note &&!document.getElementById('upNote').dataset.me) {document.getElementById('upNote').value=fnP.note; document.getElementById('noteBadge').style.display='';}
+
+  const ocrBar=document.getElementById('ocrBar'), ocrIcon=document.getElementById('ocrIcon');
+  const ocrStatus=document.getElementById('ocrStatus'), retryBtn=document.getElementById('ocrRetryBtn');
+  ocrBar.style.display='flex'; ocrIcon.className='ocr-spin'; ocrIcon.textContent='⏳';
+  ocrStatus.textContent='EXIF 읽는 중...'; retryBtn.style.display='none';
+
+  const exifStr=await readExifDate(file);
+  if(exifStr){
+    const parts=exifStr.split(' ');
+    afAuto('Date',parts[0]?.replace(/:/g,'-'),'dateBadge');
+    afAuto('Time',parts[1]?.slice(0,5),'timeBadge');
+  }
+
+  ocrStatus.textContent='OCR 분석 중...';
+  try {
+    const worker=await getOCRWorker(p=>{
+      if(currentOCRAbort)return;
+      ocrStatus.textContent=`OCR 분석 중... ${Math.round(p*100)}%`;
+    });
+    if(currentOCRAbort){ocrBar.style.display='none';return;}
+    const {data:{text}}=await worker.recognize(file);
+    if(currentOCRAbort)return;
+    const parsed=parseOCRText(text);
+    if(parsed.tag  &&!document.getElementById('upTag').dataset.me)  {document.getElementById('upTag').value=parsed.tag;  document.getElementById('tagBadge').style.display='';}
+    if(parsed.date &&!document.getElementById('upDate').dataset.me) {document.getElementById('upDate').value=parsed.date; document.getElementById('dateBadge').style.display='';}
+    if(parsed.time &&!document.getElementById('upTime').dataset.me) {document.getElementById('upTime').value=parsed.time; document.getElementById('timeBadge').style.display='';}
+    if(parsed.wt   &&!document.getElementById('wtRg').dataset.me){
+      const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+      let radioVal=parsed.wt, phaseVal=null;
+      if(w.modPhases && w.modPhases.includes(parsed.wt)) { radioVal=w.mod; phaseVal=parsed.wt; }
+      else if(w.newPhases && w.newPhases.includes(parsed.wt)) { radioVal=w.new; phaseVal=parsed.wt; }
+      else if(String(parsed.wt).startsWith('수정-')) { radioVal=w.mod; }
+      const r=document.querySelector(`input[name="upWt"][value="${radioVal}"]`);
+      if(r){
+        r.checked=true;
+        toggleUpPhase();
+        if(phaseVal) document.getElementById('upPhase').value=phaseVal;
+        document.getElementById('wtBadge').style.display='';
+      }
+    }
+    if(parsed.cat  &&!document.getElementById('upCat').dataset.me)  {document.getElementById('upCat').value=parsed.cat;  document.getElementById('catBadge').style.display='';}
+    if(parsed.team &&!document.getElementById('upTeam').dataset.me) {document.getElementById('upTeam').value=parsed.team; document.getElementById('teamBadge').style.display='';}
+    if(parsed.note &&!document.getElementById('upNote').dataset.me) {document.getElementById('upNote').value=parsed.note; document.getElementById('noteBadge').style.display='';}
+    ocrIcon.className=''; ocrIcon.textContent='✅'; ocrStatus.textContent='OCR 완료';
+  } catch(e) {
+    if(!currentOCRAbort){ocrIcon.className=''; ocrIcon.textContent='❌'; ocrStatus.textContent='OCR 실패'; retryBtn.style.display='';}
+  }
+}
+
+function afAuto(field, val, badgeId) {
+  if (!val) return;
+  const el = document.getElementById('up'+field);
+  if (!el || el.dataset.me) return;
+  el.value = val;
+  document.getElementById(badgeId).style.display = '';
+}
+
+function retryOCR() {
+  if (currentAnalysisFile) runFileAnalysis(currentAnalysisFile);
+}
+
+['upTag','upNote','upDate','upTime'].forEach(id=>{
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',()=>{ el.dataset.me='1'; });
+  },0);
+});
+['upCat','upTeam'].forEach(id=>{
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('change',()=>{ el.dataset.me='1'; });
+  },0);
+});
+setTimeout(()=>{
+  const rg=document.getElementById('wtRg');
+  if(rg) rg.querySelectorAll('input').forEach(r=>r.addEventListener('change',()=>{ rg.dataset.me='1'; }));
+},0);
+
+function computeWt(radioGroupName, phaseSelId){
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const checked=document.querySelector(`input[name="${radioGroupName}"]:checked`);
+  const v = checked ? checked.value : w.new;
+  const phases = wtPhasesFor(v, w);
+  if(phases){
+    const ph=document.getElementById(phaseSelId);
+    return (ph && ph.value) || phases[0];
+  }
+  return v;
+}
+
+// work-shoot의 WT_EN과 동일 — 작업구분 라벨(한글)은 sanitizeForFilename이 통째로 지워버리므로
+// (비ASCII 문자 제거 규칙 때문에) 파일명용 영문 코드로 먼저 바꿔줘야 한다.
+const WT_EN={'신규':'new','진행중':'in-progress','완료':'done','변경전':'mod-before','변경후':'mod-after','도급':'contract','사급':'owner-supply','현장안전점검':'safety-check','안전용품':'safety-gear','화기감시자':'fire-watch','유도원':'guide'};
+
+// work-shoot buildFileName()과 동일한 규칙으로 파일명을 만든다 — 이렇게 올라간 사진도
+// 나중에 기기번호/작업분류 수정 시 파일명 동기화(syncEditToCloud)가 정상 동작하도록 하기 위함.
+function buildWorkFileName(p, idx){
+  const wt=WT_EN[p.wt]||sanitizeForFilename(p.wt)||'work';
+  const cat=sanitizeForFilename(p.cat)||'etc';
+  const tag=sanitizeForFilename(p.tag)||'NONAME';
+  const area=sanitizeForFilename(p.area)||'LOC';
+  const note=sanitizeForFilename(p.note);
+  const parts=['WORK',(p.date||'').replace(/-/g,''),(p.time||'').replace(':',''),wt,cat,tag,area];
+  if(note) parts.push(note);
+  parts.push(idx);
+  const fname=parts.join('_')+'.jpg';
+  return fname.length>200?fname.slice(0,196)+'.jpg':fname;
+}
+
+// 갤러리 업로드 모달에서 선택한 사진을 Supabase에도 올려서, 모바일 등 다른 기기/PC에서도
+// "☁️ 동기화"로 받아볼 수 있게 한다. 실패해도(오프라인 등) 로컬 저장은 계속 진행되고,
+// 그 경우 이 사진은 이 기기에만 남는 로컬 전용 사진이 된다.
+async function uploadPhotoToCloud(p, file, idx){
+  if(!sbClient) return;
+  try{
+    const fname=buildWorkFileName(p, idx+1);
+    const filePath=`${p.date||'nodate'}/${fname}`;
+    const {error:stErr}=await sbClient.storage.from('work-photo').upload(filePath,file,{contentType:file.type||'image/jpeg',upsert:true});
+    if(stErr){ console.warn('[업로드] 클라우드 저장 실패, 로컬에만 저장됨:',stErr.message); return; }
+    const photoUrl=sbClient.storage.from('work-photo').getPublicUrl(filePath).data.publicUrl;
+    const {data:inserted,error:dbErr}=await sbClient.from('work_photos').insert({
+      date:p.date||'', time:p.time||'', tag:p.tag||'',
+      cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
+      note:p.note||'', photo_url:photoUrl,
+      sender:p.team||'', menu:p.menu||'',
+    }).select();
+    // .single() 대신 .select()만 쓴다 — RLS 정책 때문에 insert는 성공해도 select-back이
+    // 막혀 0행이 돌아오는 경우가 있는데, single()은 그럴 때 406 에러를 던져버린다.
+    if(dbErr){ console.warn('[업로드] 클라우드 DB 반영 실패, 로컬에만 저장됨:',dbErr.message); return; }
+    p.cloud_url=photoUrl;
+    p.cloud_id=(inserted&&inserted[0]&&inserted[0].id!=null)?inserted[0].id:null;
+    p.name=fname;
+  }catch(e){ console.warn('[업로드] 클라우드 업로드 예외, 로컬에만 저장됨:',e); }
+}
+
+async function savePhotos(){
+  const date=document.getElementById('upDate').value;
+  if(!date){alert('날짜를 입력해 주세요.');return;}
+  const cat =document.getElementById('upCat').value;
+  const wt  =computeWt('upWt','upPhase');
+  const time=document.getElementById('upTime').value;
+  const tag =document.getElementById('upTag').value.trim();
+  const team=document.getElementById('upTeam').value;
+  const area=document.getElementById('upArea').value;
+  const note=document.getElementById('upNote').value.trim();
+  if(!pendingFiles.length){alert('사진을 선택해 주세요.');return;}
+
+  const btn=document.getElementById('upSaveBtn');
+  btn.disabled=true; btn.textContent='저장 중...';
+  const bar=document.getElementById('upProgBar');
+  document.getElementById('upProg').style.display='block';
+  document.getElementById('upProgLbl').textContent=`0 / ${pendingFiles.length}장 저장 중...`;
+  const total=pendingFiles.length;
+
+  for(let i=0;i<total;i++){
+    const f=pendingFiles[i];
+    document.getElementById('upProgLbl').textContent=`${i+1} / ${total}장 인식 중...`;
+    const dataUrl=await fileToDataUrl(f);
+    // 여러 장을 한 번에 선택해도 입력창 값은 전부 공유되므로, 사진마다 이미 찍혀있는
+    // 워터마크를 각각 OCR로 읽어서(있으면) 그 사진만의 값으로 우선 적용한다.
+    let ocrInfo={};
+    try{
+      const cropBlob=await cropWatermarkRegion(dataUrl);
+      const worker=await getOCRWorker(()=>{});
+      const {data:{text}}=await worker.recognize(cropBlob);
+      ocrInfo=parseOCRText(text);
+    }catch(e){ console.warn('[업로드 OCR] 인식 실패, 입력값으로 대체:',e); }
+    const p={
+      id:Date.now()+Math.random(),
+      date: ocrInfo.date||date, time: ocrInfo.time||time,
+      tag:  ocrInfo.tag||tag,
+      cat:  (ocrInfo.cat && cats.includes(ocrInfo.cat)) ? ocrInfo.cat : cat,
+      wt:   ocrInfo.wt||wt,
+      area: (ocrInfo.loc && areas.includes(ocrInfo.loc)) ? ocrInfo.loc : area,
+      team: ocrInfo.team||team,
+      note: ocrInfo.note||note,
+      name:f.name,size:f.size,dataUrl,created:new Date().toISOString(),menu:activeMenu
+    };
+    document.getElementById('upProgLbl').textContent=`${i+1} / ${total}장 저장 중...`;
+    await uploadPhotoToCloud(p, f, i); // 성공하면 p.cloud_url/p.name이 클라우드 기준으로 갱신됨(실패해도 로컬 저장은 계속 진행)
+    await savePhotoToDB(p); photos.unshift(p);
+    bar.style.width=`${((i+1)/total)*100}%`;
+  }
+
+  photos.sort((a,b)=>(b.date+b.created).localeCompare(a.date+a.created));
+
+  selCat=cat; selWt=workTypeFolderName(wt);
+  resetFilter();
+  populateDateFilter();
+  renderSidebar(); renderPhotos(); updateHeader(); closeUpload();
+  btn.disabled=false; btn.textContent='💾 저장';
+}
+
+function fileToDataUrl(f){return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(f);});}
+
+// ── 필터 초기화 ───────────────────────────────────────
+function resetFilter() {
+  ['fDate','fSearch'].forEach(id=>document.getElementById(id).value='');
+  ['fTeam','fWt'].forEach(id=>document.getElementById(id).value='');
+  renderPhotos();
+}
+
+// ── 선택 모드 ────────────────────────────────────────
+let selMode = false;
+let selectedIds = new Set();
+
+function toggleSelMode() {
+  selMode = !selMode;
+  if (!selMode) selectedIds.clear();
+  document.getElementById('selBar').classList.toggle('show', selMode);
+  document.getElementById('selModeBtn').textContent = selMode ? '✕ 선택 끄기' : '☑️ 선택';
+  updateSelBar();
+  renderPhotos();
+}
+
+function exitSelMode() {
+  selMode = false;
+  selectedIds.clear();
+  document.getElementById('selBar').classList.remove('show');
+  document.getElementById('selModeBtn').textContent = '☑️ 선택';
+  renderPhotos();
+}
+
+function toggleSelect(id) {
+  const sid = String(id);
+  if (selectedIds.has(sid)) selectedIds.delete(sid);
+  else selectedIds.add(sid);
+  const card = document.querySelector(`.photo-card[data-photoid="${sid}"]`);
+  if (card) card.classList.toggle('selected', selectedIds.has(sid));
+  const cb = document.querySelector(`.pc-cb[data-id="${sid}"]`);
+  if (cb) cb.checked = selectedIds.has(sid);
+  updateSelBar();
+}
+
+function selectAllFiltered() {
+  const filtered = getFiltered();
+  const allSel = filtered.every(p => selectedIds.has(String(p.id)));
+  filtered.forEach(p => {
+    const sid = String(p.id);
+    if (allSel) selectedIds.delete(sid); else selectedIds.add(sid);
+  });
+  updateSelBar();
+  renderPhotos();
+}
+
+function updateSelBar() {
+  const count = selectedIds.size;
+  document.getElementById('selCount').textContent = count + '장 선택됨';
+  document.getElementById('dlSelBtn').disabled = count === 0;
+  document.getElementById('delSelBtn').disabled = count === 0;
+  document.getElementById('editSelBtn').disabled = count === 0;
+  const filtered = getFiltered();
+  const allSel = filtered.length > 0 && filtered.every(p => selectedIds.has(String(p.id)));
+  document.getElementById('selAllBtn').textContent = allSel ? '전체 해제' : '전체 선택';
+}
+
+async function deleteSelected() {
+  const ids = [...selectedIds];
+  if (!ids.length) return;
+  const targets = ids.map(sid => photos.find(x => String(x.id) === sid)).filter(Boolean);
+  const cloudCount = targets.filter(p => p.cloud_url).length;
+  const warn = cloudCount>0
+    ? `${ids.length}장의 사진을 삭제하시겠습니까?\n이 중 ${cloudCount}장은 클라우드 목록(테이블)에서도 삭제됩니다. (사진 파일 자체는 Storage에 남습니다)`
+    : `${ids.length}장의 사진을 이 기기에서 삭제하시겠습니까?`;
+  if (!confirm(warn)) return;
+  const btn = document.getElementById('delSelBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 삭제 중...';
+  for (const sid of ids) {
+    const p = photos.find(x => String(x.id) === sid);
+    if (!p) continue;
+    if (p.cloud_url) await deleteCloudRow(p);
+    await deletePhotoDB(p.id);
+  }
+  photos = photos.filter(p => !ids.includes(String(p.id)));
+  selectedIds.clear();
+  btn.textContent = '🗑 선택 삭제';
+  updateSelBar(); renderSidebar(); renderPhotos(); updateHeader();
+}
+
+async function downloadSelected() {
+  const ids = [...selectedIds];
+  if (!ids.length) return;
+  const btn = document.getElementById('dlSelBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 다운로드 중...';
+  for (let i = 0; i < ids.length; i++) {
+    const p = photos.find(x => String(x.id) === ids[i]);
+    if (!p) continue;
+    const a = document.createElement('a');
+    a.href = p.dataUrl;
+    a.download = p.name || ('WORK_' + (p.date||'nodate') + '_' + (p.tag||'NOTAG') + '.jpg');
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (i < ids.length - 1) await new Promise(r => setTimeout(r, 150));
+  }
+  btn.textContent = '✅ ' + ids.length + '장 완료!';
+  setTimeout(() => {
+    btn.disabled = selectedIds.size === 0;
+    btn.textContent = '⬇️ 선택 다운로드';
+  }, 2000);
+}
+
+function openBatchEdit() {
+  if (!selectedIds.size) return;
+  document.getElementById('beCount').textContent = selectedIds.size;
+  document.getElementById('beWt').value = '';
+  document.getElementById('beCat').innerHTML  = '<option value="">-- 변경 안함 --</option>'+cats.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('beCat').value = '';
+  document.getElementById('beTeam').innerHTML = '<option value="">-- 변경 안함 --</option>'+teams.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('beTeam').value = '';
+  document.getElementById('beArea').innerHTML = '<option value="">-- 변경 안함 --</option>'+areas.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('beArea').value = '';
+  document.getElementById('beNote').value = '';
+  document.getElementById('batchEditOverlay').classList.add('show');
+}
+function closeBatchEdit() {
+  document.getElementById('batchEditOverlay').classList.remove('show');
+}
+async function saveBatchEdit() {
+  const wt   = document.getElementById('beWt').value;
+  const cat  = document.getElementById('beCat').value;
+  const team = document.getElementById('beTeam').value;
+  const area = document.getElementById('beArea').value;
+  const note = document.getElementById('beNote').value.trim();
+  const ids  = [...selectedIds];
+  const btn  = document.getElementById('beSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ 적용 중...';
+  for (const sid of ids) {
+    const p = photos.find(x => String(x.id) === sid);
+    if (!p) continue;
+    const oldFields = { tag:p.tag, cat:p.cat, date:p.date, time:p.time, wt:p.wt, area:p.area, note:p.note };
+    if (wt)   p.wt   = wt;
+    if (cat)  p.cat  = cat;
+    if (team) p.team = team;
+    if (area) p.area = area;
+    if (note) p.note = note;
+    await syncEditToCloud(p, oldFields);
+    await savePhotoToDB(p);
+  }
+  btn.disabled = false; btn.textContent = '💾 적용';
+  closeBatchEdit();
+  photos.sort((a,b) => (b.date+b.created).localeCompare(a.date+a.created));
+  renderSidebar(); renderPhotos(); updateHeader();
+}
+
+// ── 사진 상세 모달 ───────────────────────────────────
+function sizeDetModal(img){
+  const iw=img.naturalWidth, ih=img.naturalHeight;
+  if(!iw||!ih)return;
+  const maxImgH=Math.min(window.innerHeight*0.6,560);
+  const w=Math.max(320,Math.min(Math.round(maxImgH*iw/ih),620));
+  document.getElementById('detModal').style.width=w+'px';
+  const meta=document.querySelector('#detModal .det-meta');
+  // 열 너비를 내용 길이에 맞춰 자동으로 늘어나는 max-content 대신 1fr 1fr(항상 정확히 반반)로
+  // 고정한다 — 기기번호 값이 길고 짧음에 따라 "날짜/시간" 열의 시작 위치가 사진마다 달라 보이던
+  // 문제(사진 비율과는 무관, 순전히 텍스트 길이 때문)를 없애기 위함.
+  meta.style.gridTemplateColumns=w<440?'1fr':'1fr 1fr';
+  // 열 간격도 사진 비율(창 너비)과 무관하게 항상 고정.
+  meta.style.columnGap='16px';
+}
+function applyDetTransform(){
+  const img=document.getElementById('detImg');
+  if(!img)return;
+  img.style.transform=`translate(${detPanX}px,${detPanY}px) scale(${detZoom})`;
+  img.classList.toggle('zoomed', detZoom>1);
+  const pct=document.getElementById('detZoomPct');
+  if(pct) pct.textContent=Math.round(detZoom*100)+'%';
+}
+function clampDetPan(){
+  const wrap=document.getElementById('detImgWrap');
+  if(!wrap)return;
+  const maxOffX=wrap.clientWidth*(detZoom-1)/2+40;
+  const maxOffY=wrap.clientHeight*(detZoom-1)/2+40;
+  detPanX=Math.max(-maxOffX,Math.min(maxOffX,detPanX));
+  detPanY=Math.max(-maxOffY,Math.min(maxOffY,detPanY));
+}
+function resetDetZoom(){
+  detZoom=1; detPanX=0; detPanY=0;
+  applyDetTransform();
+}
+function zoomDetBy(delta){
+  detZoom=Math.max(DET_ZOOM_MIN,Math.min(DET_ZOOM_MAX,detZoom+delta));
+  if(detZoom<=1){detZoom=1;detPanX=0;detPanY=0;}
+  clampDetPan();
+  applyDetTransform();
+}
+function openDetail(id){
+  if (selMode) { toggleSelect(String(id)); return; }
+  const p=photos.find(x=>String(x.id)===String(id));if(!p)return;
+  currentDetailId=p.id;
+  const idxInList=getFiltered().findIndex(x=>x.id===p.id);
+  if(idxInList!==-1) currentDetailIndex=idxInList;
+  resetDetZoom();
+  const img=document.getElementById('detImg');
+  img.onload=()=>sizeDetModal(img);
+  img.src=p.dataUrl;
+  const m=WT_META[p.wt]||{};
+  document.getElementById('dPath').innerHTML=`<span class="pt pt-cat">${p.cat||'—'}</span><span class="pt ${m.ptCls||''}">${m.icon||''} ${p.wt||'—'}</span>`;
+  document.getElementById('dTag').textContent=p.tag||'—';
+  document.getElementById('dDate').textContent=[p.date,p.time].filter(Boolean).join('  ');
+  document.getElementById('dTeam').textContent=p.team||'—';
+  document.getElementById('dArea').textContent=p.area||'—';
+  document.getElementById('dNote').textContent=p.note||'—';
+  document.getElementById('dName').textContent=p.name||'';
+  document.getElementById('detOverlay').classList.add('show');
+}
+function navigateDetail(dir){
+  const list=getFiltered();
+  let idx=list.findIndex(p=>p.id===currentDetailId);
+  // 수정 저장으로 현재 사진이 필터 조건을 벗어난 경우, 마지막으로 있던 위치를 기준으로 계속 이동한다.
+  if(idx===-1) idx=currentDetailIndex;
+  if(idx===-1)return;
+  const nextIdx=idx+dir;
+  if(nextIdx<0||nextIdx>=list.length)return;
+  cancelDetailEdit();
+  openDetail(String(list[nextIdx].id));
+}
+function closeDetail(){
+  document.getElementById('detOverlay').classList.remove('show');
+  cancelDetailEdit();
+  resetDetZoom();
+}
+window.addEventListener('resize', () => {
+  if (document.getElementById('detOverlay').classList.contains('show')) {
+    sizeDetModal(document.getElementById('detImg'));
+  }
+});
+(function initDetZoomEvents(){
+  const wrap=document.getElementById('detImgWrap');
+  const img=document.getElementById('detImg');
+  if(!wrap||!img)return;
+  wrap.addEventListener('wheel',(e)=>{
+    if(!document.getElementById('detOverlay').classList.contains('show'))return;
+    e.preventDefault();
+    zoomDetBy(e.deltaY<0?0.25:-0.25);
+  },{passive:false});
+  // 우클릭 드래그로 이동할 때 브라우저 기본 우클릭 메뉴가 뜨지 않게 막는다.
+  wrap.addEventListener('contextmenu',(e)=>{ e.preventDefault(); });
+  wrap.addEventListener('pointerdown',(e)=>{
+    if(detZoom<=1)return;
+    detDragging=true;
+    detDragStartX=e.clientX; detDragStartY=e.clientY;
+    detPanStartX=detPanX; detPanStartY=detPanY;
+    img.classList.add('dragging');
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove',(e)=>{
+    if(!detDragging)return;
+    detPanX=detPanStartX+(e.clientX-detDragStartX);
+    detPanY=detPanStartY+(e.clientY-detDragStartY);
+    clampDetPan();
+    applyDetTransform();
+  });
+  function endDetDrag(){
+    if(!detDragging)return;
+    detDragging=false;
+    img.classList.remove('dragging');
+  }
+  wrap.addEventListener('pointerup',endDetDrag);
+  wrap.addEventListener('pointercancel',endDetDrag);
+})();
+
+function openDetailEdit() {
+  const p = photos.find(x => x.id === currentDetailId); if (!p) return;
+  document.getElementById('eDate').value = p.date || '';
+  document.getElementById('eTime').value = p.time || '';
+  document.getElementById('eTag').value  = p.tag  || '';
+  document.getElementById('eNote').value = p.note || '';
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const isModPhase = w.modPhases && w.modPhases.includes(p.wt);
+  const isNewPhase = w.newPhases && w.newPhases.includes(p.wt);
+  if (isModPhase) {
+    document.getElementById('eWtMod').checked = true;
+  } else if (isNewPhase) {
+    document.getElementById('eWtNew').checked = true;
+  } else {
+    const r = document.querySelector(`input[name="eWt"][value="${p.wt}"]`);
+    if (r) r.checked = true; else document.getElementById('eWtNew').checked = true;
+  }
+  toggleEPhase();
+  if (isModPhase || isNewPhase) document.getElementById('ePhase').value = p.wt;
+  document.getElementById('eCat').innerHTML  = cats.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('eCat').value = p.cat || '';
+  document.getElementById('eTeam').innerHTML = '<option value="">선택</option>'+teams.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('eTeam').value = p.team || '';
+  document.getElementById('eArea').innerHTML = '<option value="">선택</option>'+areas.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('eArea').value = p.area || '';
+  const ep = document.getElementById('eNotePreset');
+  ep.innerHTML = '<option value="">-- 프리셋 선택 --</option>'+notePresets.map(v=>`<option>${v}</option>`).join('');
+  ep.style.display = notePresets.length ? '' : 'none';
+  document.getElementById('detView').style.display = 'none';
+  document.getElementById('detEdit').style.display = '';
+  // 수정 화면은 입력칸이 많아 사진까지 원래 크기로 두면 스크롤이 생기므로, 수정 중엔 사진을 줄인다.
+  document.getElementById('detModal').classList.add('editing');
+}
+
+function cancelDetailEdit() {
+  document.getElementById('detView').style.display = '';
+  document.getElementById('detEdit').style.display = 'none';
+  document.getElementById('detModal').classList.remove('editing');
+}
+
+async function saveDetailEdit() {
+  const p = photos.find(x => x.id === currentDetailId); if (!p) return;
+  const oldFields = { tag:p.tag, cat:p.cat, date:p.date, time:p.time, wt:p.wt, area:p.area, note:p.note };
+  p.date = document.getElementById('eDate').value;
+  p.time = document.getElementById('eTime').value;
+  p.tag  = document.getElementById('eTag').value.trim();
+  p.note = document.getElementById('eNote').value.trim();
+  p.wt   = computeWt('eWt','ePhase');
+  p.cat  = document.getElementById('eCat').value;
+  p.team = document.getElementById('eTeam').value;
+  p.area = document.getElementById('eArea').value;
+  await syncEditToCloud(p, oldFields);
+  await savePhotoToDB(p);
+  photos.sort((a,b)=>(b.date+b.created).localeCompare(a.date+a.created));
+  cancelDetailEdit();
+  openDetail(String(p.id));
+  renderSidebar(); renderPhotos();
+}
+
+function applyEditNotePreset(sel) {
+  if (!sel.value) return;
+  document.getElementById('eNote').value = sel.value;
+  sel.value = '';
+}
+// work_photos 테이블 행만 삭제한다 — Storage의 실제 사진 파일은 건드리지 않고 그대로 둔다
+// (고아 파일로 남지만, 나중에 필요하면 Storage↔테이블 대조 SQL로 복구 가능).
+async function deleteCloudRow(p){
+  if(!p.cloud_url || !sbClient) return;
+  try{
+    const q = p.cloud_id!=null
+      ? sbClient.from('work_photos').delete().eq('id', p.cloud_id)
+      : sbClient.from('work_photos').delete().eq('photo_url', p.cloud_url);
+    const {error}=await q;
+    if(error) console.warn('[클라우드 삭제] 테이블 행 삭제 실패:',error.message);
+  }catch(e){ console.warn('[클라우드 삭제] 예외:',e); }
+}
+
+async function deletePhoto(){
+  const p=photos.find(x=>x.id===currentDetailId);
+  const isCloud = p && p.cloud_url;
+  const warnMsg = isCloud
+    ? '이 사진을 삭제하시겠습니까?\n클라우드 목록(테이블)에서도 삭제됩니다. (사진 파일 자체는 Storage에 남습니다)'
+    : '이 사진을 이 기기에서 삭제하시겠습니까?';
+  if(!confirm(warnMsg))return;
+  // 삭제하기 전, 지금 보고 있던 사진이 목록에서 몇 번째였는지 기억해뒀다가 삭제 후 그
+  // 자리(=다음 사진)를 이어서 보여준다. 창을 닫지 않고 연속으로 삭제할 수 있게 하기 위함.
+  const listBefore = getFiltered();
+  const idxBefore = listBefore.findIndex(x=>x.id===currentDetailId);
+  if(isCloud) await deleteCloudRow(p);
+  await deletePhotoDB(currentDetailId);
+  photos=photos.filter(p=>p.id!==currentDetailId);
+  renderSidebar(); renderPhotos(); updateHeader();
+  const listAfter = getFiltered();
+  if(idxBefore!==-1 && listAfter.length){
+    const nextIdx = Math.min(idxBefore, listAfter.length-1);
+    openDetail(String(listAfter[nextIdx].id));
+  } else {
+    closeDetail();
+  }
+}
+
+// ── 설정 모달 ────────────────────────────────────────
+function openSettings(){
+  const t=document.getElementById('folderSectionTitle');
+  if(t) t.textContent='📁 작업 분류 폴더 관리 ('+activeMenu+')';
+  renderFolderList(); renderTeamChips(); renderAreaChips(); renderNotePresetChips();
+  document.getElementById('setOverlay').classList.add('show');
+}
+function closeSettings(){ document.getElementById('setOverlay').classList.remove('show'); }
+
+function renderFolderList(){
+  const el=document.getElementById('folderList');
+  el.innerHTML=cats.map((cat,i)=>{
+    const cnt=photos.filter(p=>(p.cat||'Others')===cat && (p.menu||'시공')===activeMenu).length;
+    return`<div class="folder-item">
+      <label>
+        <input type="checkbox" ${enabledCats.has(cat)?'checked':''} onchange='toggleFolder(${J(cat)},this.checked)'>
+        <span>${cat}</span>
+      </label>
+      ${cnt?`<span class="fi-cnt">${cnt}장</span>`:''}
+      <button class="fi-del" onclick="removeCat(${i})" title="삭제">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function renderTeamChips(){
+  document.getElementById('teamChips').innerHTML=teams.map((t,i)=>`<div class="chip">${t}<button onclick="removeTeam(${i})">✕</button></div>`).join('');
+}
+
+function toggleFolder(cat,enabled){
+  if(enabled)enabledCats.add(cat); else enabledCats.delete(cat);
+  saveSettings(); renderSidebar(); renderFolderList();
+}
+function addTeam(){const v=document.getElementById('newTeam').value.trim();if(!v||teams.includes(v))return;teams.push(v);document.getElementById('newTeam').value='';saveSettings();renderTeamChips();}
+function removeTeam(i){if(teams.length<=1)return;teams.splice(i,1);saveSettings();renderTeamChips();}
+
+function renderAreaChips(){
+  document.getElementById('areaChips').innerHTML=areas.map((a,i)=>`<div class="chip">${a}<button onclick="removeArea(${i})">✕</button></div>`).join('');
+}
+function addArea(){const v=document.getElementById('newArea').value.trim();if(!v||areas.includes(v))return;areas.push(v);document.getElementById('newArea').value='';saveSettings();renderAreaChips();}
+function removeArea(i){areas.splice(i,1);saveSettings();renderAreaChips();}
+
+// 분류/구역은 추가·삭제 시 이미 즉시 저장+클라우드 반영되지만, work-shoot(모바일/PC)과
+// 동일하게 "저장" 버튼을 명시적으로 눌러 확실히 동기화됐음을 확인할 수 있게 한다.
+async function saveAllSettings(){
+  const btn=document.getElementById('saveAllSettingsBtn');
+  const orig=btn.textContent;
+  btn.disabled=true; btn.textContent='저장 중...';
+  saveSettingsLocal();
+  await pushSettingsToSupabase();
+  btn.textContent='✅ 저장됨';
+  setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; },1500);
+}
+
+function renderNotePresetChips(){
+  document.getElementById('notePresetChips').innerHTML=notePresets.map((n,i)=>`<div class="chip">${n}<button onclick="removeNotePreset(${i})">✕</button></div>`).join('');
+}
+function addNotePreset(){const v=document.getElementById('newNotePreset').value.trim();if(!v||notePresets.includes(v))return;notePresets.push(v);document.getElementById('newNotePreset').value='';saveSettings();renderNotePresetChips();}
+function removeNotePreset(i){notePresets.splice(i,1);saveSettings();renderNotePresetChips();}
+function addCat(){
+  const v=document.getElementById('newCat').value.trim();
+  if(!v||cats.includes(v))return;
+  cats.push(v); enabledCats.add(v);
+  document.getElementById('newCat').value='';
+  saveSettings(); renderSidebar(); renderFolderList();
+}
+function removeCat(i){
+  const cat=cats[i];
+  if(photos.some(p=>(p.cat||'Others')===cat && (p.menu||'시공')===activeMenu)){alert(`"${cat}"에 사진이 있어 삭제할 수 없습니다.`);return;}
+  cats.splice(i,1); enabledCats.delete(cat);
+  saveSettings(); renderSidebar(); renderFolderList();
+}
+function populateDateFilter() {
+  const sel = document.getElementById('fDate');
+  const cur = sel.value;
+  const dates = [...new Set(photos.map(p=>p.date).filter(Boolean))].sort().reverse();
+  sel.innerHTML = '<option value="">전체 날짜</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  if (dates.includes(cur)) sel.value = cur;
+}
+
+function populateSelects(){
+  document.getElementById('fTeam').innerHTML='<option value="">전체 팀명</option>'+teams.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('upCat').innerHTML=cats.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('upTeam').innerHTML='<option value="">선택</option>'+teams.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('upArea').innerHTML='<option value="">선택</option>'+areas.map(v=>`<option>${v}</option>`).join('');
+  const np=document.getElementById('upNotePreset');
+  np.innerHTML='<option value="">-- 프리셋 선택 --</option>'+notePresets.map(v=>`<option>${v}</option>`).join('');
+  np.style.display=notePresets.length?'':'none';
+  if(selCat) document.getElementById('upCat').value=selCat;
+}
+
+function applyNotePreset(sel){
+  if(!sel.value)return;
+  document.getElementById('upNote').value=sel.value;
+  sel.value='';
+}
+
+document.getElementById('newTeam').addEventListener('keydown',e=>{if(e.key==='Enter')addTeam();});
+document.getElementById('newCat').addEventListener('keydown',e=>{if(e.key==='Enter')addCat();});
+document.getElementById('newArea').addEventListener('keydown',e=>{if(e.key==='Enter')addArea();});
+document.getElementById('newNotePreset').addEventListener('keydown',e=>{if(e.key==='Enter')addNotePreset();});
+
+// ── 키보드 ESC ───────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape'){
+    ['upOverlay','detOverlay','setOverlay','batchOverlay','syncFilterOverlay'].forEach(id=>{
+      document.getElementById(id).classList.remove('show');
+    });
+    currentOCRAbort=true;
+    batchAbort=true;
+  }
+  if(document.getElementById('detOverlay').classList.contains('show')&&document.getElementById('detView').style.display!=='none'){
+    const isArrow=e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown';
+    if(detZoom>1 && isArrow){
+      // 확대된 상태에서는 화살표 키로 사진 이전/다음이 아니라 확대된 화면을 상하좌우로 이동
+      e.preventDefault();
+      const step=40;
+      if(e.key==='ArrowLeft')  detPanX+=step;
+      if(e.key==='ArrowRight') detPanX-=step;
+      if(e.key==='ArrowUp')    detPanY+=step;
+      if(e.key==='ArrowDown')  detPanY-=step;
+      clampDetPan();
+      applyDetTransform();
+    } else {
+      if(e.key==='ArrowLeft')navigateDetail(-1);
+      if(e.key==='ArrowRight')navigateDetail(1);
+    }
+  }
+});
+
+// ── 오버레이 바깥 클릭 닫기 ─────────────────────────
+['upOverlay','detOverlay','setOverlay','batchOverlay','syncFilterOverlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', e=>{
+    if(e.target.id===id){
+      e.target.classList.remove('show');
+      if(id==='upOverlay') currentOCRAbort=true;
+      if(id==='batchOverlay') batchAbort=true;
+    }
+  });
+});
+
+// ── 시작 ─────────────────────────────────────────────
+initDB();
+// OCR 워커 미리 초기화 (사진 선택 시 즉시 인식 시작)
+setTimeout(() => getOCRWorker(() => {}).catch(() => {}), 800);
+</script>
+</body>
+</html>
