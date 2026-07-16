@@ -262,6 +262,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
   </div>
   <div class="hdr-right">
     <div class="hdr-crumb" id="hdrCrumb"><span class="cc">전체 사진</span></div>
+    <div class="hdr-crumb" id="hdrProjectCompany" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
     <div class="spacer"></div>
     <button class="btn btn-ghost" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
     <button class="btn btn-ghost" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
@@ -706,6 +707,13 @@ const SUPABASE_KEY='sb_publishable_VC2GcwpxDg_zVbFgOnpfzg__sictyqc';
 let sbClient=null;
 try{ sbClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }
 catch(e){ console.error('Supabase 초기화 실패',e); }
+
+(function(){
+  const p=localStorage.getItem('member_project')||'';
+  const c=localStorage.getItem('member_company')||'';
+  const t=[p,c].filter(Boolean).join(' · ');
+  if(t) document.getElementById('hdrProjectCompany').textContent=t;
+})();
 
 function openSyncFilter(){
   const sel=document.getElementById('syncCatFilter');
