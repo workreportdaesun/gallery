@@ -702,8 +702,8 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 
 <script>
 // ── Supabase ─────────────────────────────────────────
-const SUPABASE_URL='https://dteljgmdbfyxubtpogcj.supabase.co';
-const SUPABASE_KEY='sb_publishable_VC2GcwpxDg_zVbFgOnpfzg__sictyqc';
+const SUPABASE_URL='https://feymoykefzfwucbrqoja.supabase.co';
+const SUPABASE_KEY='sb_publishable_ANT6G7_ka3IPHRk_4vLtBg_7G9NWW7i';
 let sbClient=null;
 try{ sbClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }
 catch(e){ console.error('Supabase 초기화 실패',e); }
@@ -1719,9 +1719,9 @@ function savePhotoToDB(p)  { invalidatePhotoImgCache(p.id); return new Promise(r
 function deletePhotoDB(id) { invalidatePhotoImgCache(id); return new Promise(res=>{ txStore('photos','readwrite').delete(id).onsuccess=()=>res(); }); }
 
 // ── 클라우드(Supabase) 삭제 ───────────────────────────
-// photo_url 예: https://.../storage/v1/object/public/work-photo/{date}/{filename}
+// photo_url 예: https://.../storage/v1/object/public/work-gallery/{date}/{filename}
 function storagePathFromCloudUrl(url){
-  const marker='/work-photo/';
+  const marker='/work-gallery/';
   const idx=(url||'').indexOf(marker);
   if(idx===-1) return null;
   try{ return decodeURIComponent(url.slice(idx+marker.length).split('?')[0]); }
@@ -1773,8 +1773,8 @@ async function forceResyncPhoto(){
           const dir=oldPath.includes('/')?oldPath.slice(0,oldPath.lastIndexOf('/')+1):'';
           const newPath=dir+newName;
           try{
-            const {error:moveErr}=await sbClient.storage.from('work-photo').move(oldPath,newPath);
-            if(!moveErr){ p.cloud_url=sbClient.storage.from('work-photo').getPublicUrl(newPath).data.publicUrl; p.name=newName; }
+            const {error:moveErr}=await sbClient.storage.from('work-gallery').move(oldPath,newPath);
+            if(!moveErr){ p.cloud_url=sbClient.storage.from('work-gallery').getPublicUrl(newPath).data.publicUrl; p.name=newName; }
             else console.warn('[강제 동기화] 파일명 변경 실패:',moveErr.message);
           }catch(e){ console.warn('[강제 동기화] 파일명 변경 예외:',e); }
         }
@@ -1812,9 +1812,9 @@ async function reuploadPhotoToCloud(){
     const blob = await (await fetch(p.dataUrl)).blob();
     const fname = buildWorkFileName(p, Date.now()%100000);
     const filePath = `${p.date||'nodate'}/${fname}`;
-    const {error:stErr} = await sbClient.storage.from('work-photo').upload(filePath, blob, {contentType:blob.type||'image/jpeg', upsert:true});
+    const {error:stErr} = await sbClient.storage.from('work-gallery').upload(filePath, blob, {contentType:blob.type||'image/jpeg', upsert:true});
     if(stErr){ alert('업로드 실패: ' + stErr.message); return; }
-    const photoUrl = sbClient.storage.from('work-photo').getPublicUrl(filePath).data.publicUrl;
+    const photoUrl = sbClient.storage.from('work-gallery').getPublicUrl(filePath).data.publicUrl;
     const payload = {
       date:p.date||'', time:p.time||'', tag:p.tag||'',
       cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
@@ -1877,9 +1877,9 @@ async function syncEditToCloud(p, oldFields){
       if(oldPath){
         const dir=oldPath.includes('/')?oldPath.slice(0,oldPath.lastIndexOf('/')+1):'';
         const newPath=dir+newName;
-        const {error:moveErr}=await sbClient.storage.from('work-photo').move(oldPath,newPath);
+        const {error:moveErr}=await sbClient.storage.from('work-gallery').move(oldPath,newPath);
         if(!moveErr){
-          p.cloud_url=sbClient.storage.from('work-photo').getPublicUrl(newPath).data.publicUrl;
+          p.cloud_url=sbClient.storage.from('work-gallery').getPublicUrl(newPath).data.publicUrl;
           p.name=newName;
         }else{
           console.warn('[클라우드 동기화] 파일명 변경 실패, 메타데이터만 반영:',moveErr.message);
@@ -2561,9 +2561,9 @@ async function uploadPhotoToCloud(p, file, idx){
   try{
     const fname=buildWorkFileName(p, idx+1);
     const filePath=`${p.date||'nodate'}/${fname}`;
-    const {error:stErr}=await sbClient.storage.from('work-photo').upload(filePath,file,{contentType:file.type||'image/jpeg',upsert:true});
+    const {error:stErr}=await sbClient.storage.from('work-gallery').upload(filePath,file,{contentType:file.type||'image/jpeg',upsert:true});
     if(stErr){ console.warn('[업로드] 클라우드 저장 실패, 로컬에만 저장됨:',stErr.message); return; }
-    const photoUrl=sbClient.storage.from('work-photo').getPublicUrl(filePath).data.publicUrl;
+    const photoUrl=sbClient.storage.from('work-gallery').getPublicUrl(filePath).data.publicUrl;
     const {data:inserted,error:dbErr}=await sbClient.from('work_photos').insert({
       date:p.date||'', time:p.time||'', tag:p.tag||'',
       cat:p.cat||'', loc:p.area||'', work_type:p.wt||'',
