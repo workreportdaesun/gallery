@@ -701,6 +701,10 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 </div>
 
 <script>
+// ── 로그인 가드: report/shoot와 같은 localStorage 키(member_id) 사용.
+// 로그인 없이 이 URL로 바로 들어오는 걸 막고, report 로그인 화면을 거치게 한다.
+if(!localStorage.getItem('member_id')){ location.href='/report/app/login.html'; }
+
 // ── Supabase ─────────────────────────────────────────
 const SUPABASE_URL='https://feymoykefzfwucbrqoja.supabase.co';
 const SUPABASE_KEY='sb_publishable_ANT6G7_ka3IPHRk_4vLtBg_7G9NWW7i';
