@@ -1886,6 +1886,12 @@ async function reuploadPhotoToCloud(){
   }
 }
 
+// toISOString()은 UTC 기준이라 한국 시간 자정~오전 9시 사이엔 날짜가 하루 전으로 나온다 — 항상 로컬 날짜로 계산
+function localDateStr(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 // work-shoot의 sanitizeForFilename과 동일한 규칙 — 파일명 속 기기번호 세그먼트를 정확히 찾아 바꾸기 위함
 function sanitizeForFilename(str){
   return str?String(str).trim()
@@ -2435,7 +2441,7 @@ function openUpload() {
   document.getElementById('upProg').style.display='none';
   document.getElementById('ocrBar').style.display='none';
   document.getElementById('fileInput').value='';
-  document.getElementById('upDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('upDate').value=localDateStr();
   document.getElementById('upTime').value=new Date().toTimeString().slice(0,5);
   ['upTag','upNote'].forEach(id=>document.getElementById(id).value='');
   if(selCat) document.getElementById('upCat').value=selCat;
