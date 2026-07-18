@@ -249,6 +249,30 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .add-row { display: flex; gap: 6px; }
 .add-row input { flex: 1; background: var(--bg); border: 1px solid var(--bd); border-radius: 6px; color: var(--tx); font-size: 0.8rem; padding: 6px 9px; font-family: inherit; }
 .add-row input:focus { outline: none; border-color: var(--ac); }
+
+/* ── 모바일 대응 ── */
+.hdr-menu-btn { display: none; flex-shrink: 0; width: 36px; height: 36px; margin: 0 4px 0 10px; background: none; border: 1px solid var(--bd); border-radius: 6px; color: var(--tx2); font-size: 1.1rem; cursor: pointer; align-items: center; justify-content: center; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
+.sidebar-backdrop.show { display: block; }
+@media (max-width: 860px) {
+  .hdr-menu-btn { display: flex; }
+  .hdr-logo { width: auto; border-right: none; padding: 0 6px 0 0; }
+  .hdr-logo-txt { display: none; }
+  .hdr-right { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .hdr-crumb.cc, .hdr-crumb { white-space: nowrap; }
+  .menu-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 78vw; max-width: 300px;
+    transform: translateX(-100%); transition: transform .2s ease-out; z-index: 200;
+    box-shadow: 3px 0 16px rgba(0,0,0,0.4); }
+  .sidebar.open { transform: translateX(0); }
+  .filterbar { flex-direction: column; align-items: stretch; }
+  .filterbar input, .filterbar select { width: 100%; }
+  .f-sep { display: none; }
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .modal { width: 94vw; padding: 16px; }
+  .fg-row { flex-direction: column; gap: 0; }
+  .det-meta { grid-template-columns: 1fr; }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -256,6 +280,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 
 <!-- 헤더 -->
 <div class="hdr">
+  <button class="hdr-menu-btn" id="hdrMenuBtn" onclick="toggleSidebar()" aria-label="분류 목록 열기">☰</button>
   <div class="hdr-logo">
     <img class="hdr-logo-icon" src="Work%20photo_icon/icon-192.png" alt=""/>
     <span class="hdr-logo-txt">사진관리</span>
@@ -294,7 +319,8 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 <div class="app-body">
 
   <!-- 사이드바 -->
-  <div class="sidebar">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+  <div class="sidebar" id="sidebar">
     <div class="sb-top">
       <div class="sb-all sel" id="sbAll" onclick="selectAllCat()">
         <span>🗂️</span>
@@ -718,6 +744,21 @@ catch(e){ console.error('Supabase 초기화 실패',e); }
   const t=[p,c].filter(Boolean).join(' · ');
   if(t) document.getElementById('hdrProjectCompany').textContent=t;
 })();
+
+/* 모바일 화면에서 사이드바(분류 목록)를 슬라이드 서랍으로 열고 닫기 */
+function toggleSidebar(open){
+  const sb=document.getElementById('sidebar'), bd=document.getElementById('sidebarBackdrop');
+  const next = open!==undefined ? open : !sb.classList.contains('open');
+  sb.classList.toggle('open', next);
+  bd.classList.toggle('show', next);
+}
+// 분류를 고르면(PC에서도 마찬가지) 모바일에서는 자동으로 서랍을 닫아 사진 목록이 바로 보이게 함
+document.getElementById('sbList').addEventListener('click', function(){
+  if(window.innerWidth<=860) toggleSidebar(false);
+});
+document.getElementById('sbAll').addEventListener('click', function(){
+  if(window.innerWidth<=860) toggleSidebar(false);
+});
 
 function openSyncFilter(){
   const sel=document.getElementById('syncCatFilter');
