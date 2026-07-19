@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=1200">
 <title>사진관리</title>
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>
@@ -254,30 +254,20 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .hdr-menu-btn { display: none; flex-shrink: 0; width: 36px; height: 36px; margin: 0 4px 0 10px; background: none; border: 1px solid var(--bd); border-radius: 6px; color: var(--tx2); font-size: 1.1rem; cursor: pointer; align-items: center; justify-content: center; }
 .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
 .sidebar-backdrop.show { display: block; }
-@media (max-width: 860px) {
-  .hdr-menu-btn { display: flex; }
-  .hdr-logo { width: auto; border-right: none; padding: 0 6px 0 0; }
-  .hdr-logo-txt { display: none; }
-  .hdr-right { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .hdr-crumb.cc, .hdr-crumb { white-space: nowrap; }
-  .menu-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 78vw; max-width: 300px;
-    transform: translateX(-100%); transition: transform .2s ease-out; z-index: 200;
-    box-shadow: 3px 0 16px rgba(0,0,0,0.4); }
-  .sidebar.open { transform: translateX(0); }
-  .filterbar { flex-direction: column; align-items: stretch; }
-  .filterbar input, .filterbar select { width: 100%; }
-  .f-sep { display: none; }
-  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-  .modal { width: 94vw; padding: 16px; }
-  .fg-row { flex-direction: column; gap: 0; }
-  .det-meta { grid-template-columns: 1fr; }
-}
+/* 모바일은 PC와 동일한 레이아웃을 그대로 축소해서 보여주고 핀치줌으로 확인하는 방식이라
+   위 리플로우(햄버거 사이드바 등)는 쓰지 않음. 대신 조회 전용 모드에서 편집/추가/삭제류
+   버튼만 숨긴다. */
+html.view-only .adm-only { display: none !important; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <script src="/report/admin-gate.js"></script>
+<script>
+(function(){
+  if(/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)) document.documentElement.classList.add('view-only');
+})();
+</script>
 
 <!-- 헤더 -->
 <div class="hdr">
@@ -290,14 +280,14 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
     <div class="hdr-crumb" id="hdrCrumb"><span class="cc">전체 사진</span></div>
     <div class="hdr-crumb" id="hdrProjectCompany" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
     <div class="spacer"></div>
-    <button class="btn btn-ghost" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
-    <button class="btn btn-ghost" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
-    <button class="btn btn-ghost" onclick="openPhotoSheet()" title="사진대지 생성기 열기">🖨️ 사진대지 생성기</button>
-    <button class="btn btn-ghost" id="folderBtn" onclick="handleFolderBtnClick()" title="PC 폴더 지정 / 불러오기">📂 PC 폴더 지정</button>
+    <button class="btn btn-ghost adm-only" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
+    <button class="btn btn-ghost adm-only" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
+    <button class="btn btn-ghost adm-only" onclick="openPhotoSheet()" title="사진대지 생성기 열기">🖨️ 사진대지 생성기</button>
+    <button class="btn btn-ghost adm-only" id="folderBtn" onclick="handleFolderBtnClick()" title="PC 폴더 지정 / 불러오기">📂 PC 폴더 지정</button>
     <button class="btn btn-ghost" id="dupFilterBtn" onclick="toggleDupFilter()" title="같은 기기번호가 여러 장인 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
     <button class="btn btn-ghost" id="incompleteFilterBtn" onclick="toggleIncompleteFilter()" title="작업분류·기기번호·작업구역·팀명 중 하나라도 비어있는 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
-    <button class="btn btn-primary" onclick="openUpload()">+ 사진 추가</button>
-    <button class="btn btn-ghost" onclick="openSettings()" title="설정">⚙️</button>
+    <button class="btn btn-primary adm-only" onclick="openUpload()">+ 사진 추가</button>
+    <button class="btn btn-ghost adm-only" onclick="openSettings()" title="설정">⚙️</button>
   </div>
 </div>
 
@@ -349,7 +339,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
       <div class="f-sep"></div>
       <button class="f-reset" onclick="resetFilter()">초기화</button>
       <button class="f-reset" id="cloudFilterBtn" onclick="toggleCloudFilter()" title="서버(Supabase)에 실제로 존재하는 사진만 보기">☁️ 클라우드만</button>
-      <button class="f-reset" id="selModeBtn" onclick="toggleSelMode()">☑️ 선택</button>
+      <button class="f-reset adm-only" id="selModeBtn" onclick="toggleSelMode()">☑️ 선택</button>
       <span class="f-count" id="fCount"></span>
     </div>
     <div class="scroll" id="mainScroll"><div id="viewContent"></div></div>
@@ -518,7 +508,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
           <button class="btn btn-ghost" onclick="navigateDetail(-1)">◀ 이전</button>
           <button class="btn btn-ghost" onclick="navigateDetail(1)">다음 ▶</button>
         </div>
-        <div class="m-footer" style="flex-wrap:nowrap;justify-content:space-between;">
+        <div class="m-footer adm-only" style="flex-wrap:nowrap;justify-content:space-between;">
           <button class="btn btn-danger" onclick="deletePhoto()">🗑 삭제</button>
           <button class="btn btn-ghost" onclick="forceResyncPhoto()" title="예전에 분류만 바뀌고 파일명/워터마크가 안 따라간 사진을 지금 분류·기기번호 기준으로 강제로 맞춥니다">🔧 동기화</button>
           <button class="btn btn-ghost" onclick="reuploadPhotoToCloud()" title="서버 원본 파일이 유실됐지만 이 브라우저에는 사진이 남아있는 경우, 지금 값 기준으로 서버에 새로 올립니다">☁️ 서버로 재전송</button>
