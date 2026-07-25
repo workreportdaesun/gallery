@@ -16,19 +16,23 @@
   --green: #27AE60; --red: #E74C3C;
   --purple: #8E44AD; --orange: #F39C12;
   --sb-w: 224px;
+  /* 최상단 헤더 전용 고정색 — --ac/--ac2는 작업구분(시공/품질 등) 탭에 따라 JS가 실시간으로
+     바꿔쓰는 값이라 헤더 색이 탭마다 변해버림. 헤더는 작업일보(report) 앱과 항상 같은 색으로
+     고정해야 하니 별도 변수를 둠. */
+  --hdr-1: #1E3A5F; --hdr-2: #2E5F9E;
 }
 html, body { height: 100%; overflow: hidden; }
 body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--bg); color: var(--tx); display: flex; flex-direction: column; }
 
-/* 헤더 */
-.hdr { background: var(--sf); border-bottom: 1px solid var(--bd); height: 50px; padding: 0 16px 0 0; display: flex; align-items: center; gap: 0; flex-shrink: 0; z-index: 10; }
-.hdr-logo { width: var(--sb-w); display: flex; align-items: center; gap: 8px; padding: 0 14px; border-right: 1px solid var(--bd); height: 100%; flex-shrink: 0; }
+/* 헤더 — 작업일보(report) 앱과 같은 톤(진한 남색 그라디언트)으로 통일, 글자색은 어두운 배경에 맞춰 조정 */
+.hdr { background: linear-gradient(135deg,var(--hdr-1),var(--hdr-2)); border-bottom: none; height: 50px; padding: 0 16px 0 0; display: flex; align-items: center; gap: 0; flex-shrink: 0; z-index: 10; }
+.hdr-logo { width: var(--sb-w); display: flex; align-items: center; gap: 8px; padding: 0 14px; border-right: 1px solid rgba(255,255,255,0.25); height: 100%; flex-shrink: 0; }
 .hdr-logo-icon { width: 26px; height: 26px; border-radius: 6px; display: block; }
-.hdr-logo-txt { font-size: 0.88rem; font-weight: 700; white-space: nowrap; }
+.hdr-logo-txt { font-size: 0.88rem; font-weight: 700; white-space: nowrap; color: #fff; }
 .hdr-right { flex: 1; display: flex; align-items: center; padding: 0 14px; gap: 8px; }
-.hdr-crumb { font-size: 0.82rem; color: var(--tx2); display: flex; align-items: center; gap: 5px; }
-.hdr-crumb .cc { color: var(--tx); font-weight: 600; }
-.hdr-crumb .cs { color: var(--tx3); font-size: 0.75rem; }
+.hdr-crumb { font-size: 0.82rem; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 5px; }
+.hdr-crumb .cc { color: #fff; font-weight: 600; }
+.hdr-crumb .cs { color: rgba(255,255,255,0.55); font-size: 0.75rem; }
 .spacer { flex: 1; }
 .btn { border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; padding: 5px 13px; font-family: inherit; height: 30px; white-space: nowrap; }
 .btn-primary { background: var(--ac); color: #fff; }
@@ -36,6 +40,10 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .btn-ghost  { background: transparent; border: 1px solid var(--bd); color: var(--tx2); }
 .btn-ghost:hover  { border-color: var(--tx2); color: var(--tx); }
 .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
+.hdr .btn-ghost { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.9); }
+.hdr .btn-ghost:hover { border-color: #fff; color: #fff; }
+.hdr .btn-primary { box-shadow: 0 0 0 1px rgba(255,255,255,0.35); }
+.hdr .hdr-menu-btn { border-color: rgba(255,255,255,0.35); color: #fff; }
 
 /* 상위 메뉴 */
 .menu-tabs { display: flex; gap: 6px; background: var(--sf); border-bottom: 1px solid var(--bd); padding: 8px 14px; flex-shrink: 0; }
