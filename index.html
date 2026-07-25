@@ -10,7 +10,7 @@
 :root {
   --bg: #0d1117; --sf: #161b22; --sf2: #1c2128;
   --bd: #30363d; --bd2: #21262d;
-  --ac: #2f81f7; --ac2: #58a6ff;
+  --ac: #12b3a8; --ac2: #3ed6c9;
   --tx: #e6edf3; --tx2: #8b949e; --tx3: #484f58;
   --green: #3fb950; --red: #f85149;
   --purple: #a371f7; --orange: #f0883e;
@@ -57,7 +57,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .sb-top { padding: 10px 8px 6px; flex-shrink: 0; }
 .sb-all { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; color: var(--tx2); transition: background .12s, color .12s; }
 .sb-all:hover { background: rgba(255,255,255,0.05); color: var(--tx); }
-.sb-all.sel   { background: rgba(47,129,247,0.12); color: var(--ac2); }
+.sb-all.sel   { background: rgba(18,179,168,0.12); color: var(--ac2); }
 .sb-sep { height: 1px; background: var(--bd2); margin: 6px 8px; }
 .sb-section-lbl { font-size: 0.62rem; font-weight: 700; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; padding: 0 10px 4px; }
 .sb-list { flex: 1; overflow-y: auto; padding: 0 8px 12px; }
@@ -67,11 +67,11 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 
 .sb-cat { display: flex; align-items: center; gap: 5px; padding: 5px 7px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; color: var(--tx2); transition: background .1s, color .1s; margin-bottom: 1px; }
 .sb-cat:hover { background: rgba(255,255,255,0.05); color: var(--tx); }
-.sb-cat.sel   { background: rgba(47,129,247,0.12); color: var(--ac2); }
+.sb-cat.sel   { background: rgba(18,179,168,0.12); color: var(--ac2); }
 .sb-cat-ico { font-size: 0.9rem; flex-shrink: 0; }
 .sb-cat-nm  { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; }
 .sb-cnt { font-size: 0.62rem; color: var(--tx3); background: var(--bg); border-radius: 8px; padding: 1px 5px; min-width: 16px; text-align: center; flex-shrink: 0; }
-.sb-cnt.has { color: var(--ac2); background: rgba(47,129,247,0.1); }
+.sb-cnt.has { color: var(--ac2); background: rgba(18,179,168,0.1); }
 .sb-wt-group { margin-bottom: 3px; }
 .sb-caret { font-size: 0.6rem; color: var(--tx3); margin-left: 4px; flex-shrink: 0; }
 .sb-cat-dropdown { width: 100%; margin: 3px 0 6px; background: var(--bg); border: 1px solid var(--bd);
@@ -105,12 +105,12 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .photo-card:hover { border-color: var(--bd); transform: translateY(-1px); }
 .pc-dl-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.58); border: none; border-radius: 5px; color: #fff; font-size: 0.78rem; padding: 3px 7px; cursor: pointer; opacity: 0; transition: opacity .15s; z-index: 1; line-height: 1.4; }
 .photo-card:hover .pc-dl-btn { opacity: 1; }
-.pc-dl-btn:hover { background: rgba(47,129,247,0.8); }
+.pc-dl-btn:hover { background: rgba(18,179,168,0.8); }
 /* 선택 모드 */
 .pc-cb { position: absolute; top: 7px; left: 7px; width: 17px; height: 17px; accent-color: var(--ac); cursor: pointer; display: none; z-index: 2; }
 .sel-mode .pc-cb { display: block; }
 .sel-mode .pc-dl-btn { display: none; }
-.photo-card.selected { border-color: var(--ac); box-shadow: 0 0 0 2px rgba(47,129,247,0.3); }
+.photo-card.selected { border-color: var(--ac); box-shadow: 0 0 0 2px rgba(18,179,168,0.3); }
 .sel-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--sf); border-top: 1px solid var(--bd); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; z-index: 50; transform: translateY(100%); transition: transform .2s; box-shadow: 0 -4px 16px rgba(0,0,0,0.3); }
 .sel-bar.show { transform: translateY(0); }
 .sel-bar-left, .sel-bar-right { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -123,7 +123,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .badge { font-size: 0.58rem; padding: 1px 5px; border-radius: 10px; font-weight: 600; border: 1px solid; }
 .b-wt-new  { color: #3fb950; border-color: rgba(63,185,80,.35); background: rgba(63,185,80,.08); }
 .b-wt-pre  { color: #f0883e; border-color: rgba(240,136,62,.35); background: rgba(240,136,62,.08); }
-.b-wt-post { color: #2f81f7; border-color: rgba(47,129,247,.35); background: rgba(47,129,247,.08); }
+.b-wt-post { color: #12b3a8; border-color: rgba(18,179,168,.35); background: rgba(18,179,168,.08); }
 .b-team    { color: var(--purple); border-color: rgba(163,113,247,.35); background: rgba(163,113,247,.08); }
 
 /* 빈 상태 */
@@ -133,7 +133,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .empty strong { color: var(--tx2); display: block; font-size: 0.9rem; }
 
 /* 드래그 오버레이 */
-.drop-overlay { position: fixed; inset: 0; background: rgba(47,129,247,0.1); border: 3px dashed var(--ac); z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--ac); }
+.drop-overlay { position: fixed; inset: 0; background: rgba(18,179,168,0.1); border: 3px dashed var(--ac); z-index: 1000; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--ac); }
 .drop-overlay.active { display: flex; }
 
 /* 모달 공통 */
@@ -164,7 +164,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .up-list { max-height: 90px; overflow-y: auto; margin-bottom: 12px; font-size: 0.72rem; color: var(--tx3); }
 .up-list-item { padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; cursor: pointer; }
 .up-list-item:hover { background: rgba(255,255,255,0.05); color: var(--tx2); }
-.up-list-item.sel { background: rgba(47,129,247,0.12); color: var(--ac2); }
+.up-list-item.sel { background: rgba(18,179,168,0.12); color: var(--ac2); }
 
 /* 폼 그룹 */
 .fg { margin-bottom: 12px; }
@@ -188,12 +188,12 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .fg-row-compact > input { flex: 0 0 auto; width: auto; }
 
 /* 자동 배지 */
-.auto-badge { font-size: 0.6rem; padding: 1px 5px; border-radius: 8px; background: rgba(47,129,247,0.15); color: var(--ac2); border: 1px solid rgba(47,129,247,0.3); font-weight: 600; vertical-align: middle; }
+.auto-badge { font-size: 0.6rem; padding: 1px 5px; border-radius: 8px; background: rgba(18,179,168,0.15); color: var(--ac2); border: 1px solid rgba(18,179,168,0.3); font-weight: 600; vertical-align: middle; }
 
 /* 작업 구분 라디오 */
 .wt-radios { display: flex; gap: 6px; }
 .wt-radios label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--bd); border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 0.75rem; color: var(--tx2); transition: .12s; }
-.wt-radios label:has(input:checked) { border-color: var(--ac); color: var(--ac2); background: rgba(47,129,247,0.08); }
+.wt-radios label:has(input:checked) { border-color: var(--ac); color: var(--ac2); background: rgba(18,179,168,0.08); }
 .wt-radios input[type="radio"] { display: none; }
 
 /* OCR 상태 */
@@ -215,7 +215,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .pt-cat  { border-color: rgba(163,113,247,.4); color: var(--purple); background: rgba(163,113,247,.08); }
 .pt-new  { border-color: rgba(63,185,80,.35); color: var(--green); background: rgba(63,185,80,.08); }
 .pt-pre  { border-color: rgba(240,136,62,.35); color: var(--orange); background: rgba(240,136,62,.08); }
-.pt-post { border-color: rgba(47,129,247,.35); color: var(--ac2); background: rgba(47,129,247,.08); }
+.pt-post { border-color: rgba(18,179,168,.35); color: var(--ac2); background: rgba(18,179,168,.08); }
 
 /* 사진 상세 모달 */
 .det-img-wrap { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: var(--bg); }
@@ -648,12 +648,12 @@ html.view-only .adm-only { display: none !important; }
   <div class="modal" style="width:500px;">
     <button class="m-close" onclick="closeSettings()">✕</button>
     <div class="m-title">⚙️ 설정</div>
-    <div style="background:linear-gradient(135deg,#1E3A5F,#2E5F9E);color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;">
+    <div style="background:linear-gradient(135deg,#0d3d38,#128f82);color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;">
       📱 작업사진 앱과 동일한 폴더·분류 설정을 공유합니다
     </div>
 
     <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bd);">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:8px;">💾 PC 저장 폴더</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:8px;">💾 PC 저장 폴더</div>
       <div style="font-size:0.74rem;color:var(--tx3);margin-bottom:8px;line-height:1.6;">사진 검토·수정이 끝난 뒤 "PC 폴더에 저장"을 누르면 저장됩니다.<br>Chrome / Edge 전용 기능입니다.</div>
       <div id="folderStatus" style="font-size:0.77rem;color:var(--tx3);margin-bottom:10px;">폴더가 지정되지 않았습니다.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -665,13 +665,13 @@ html.view-only .adm-only { display: none !important; }
     </div>
 
     <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bd);">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:8px;">☁️ 서버(Supabase) 재동기화</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:8px;">☁️ 서버(Supabase) 재동기화</div>
       <div style="font-size:0.74rem;color:var(--tx3);margin-bottom:8px;line-height:1.6;">"✏️ 일괄 수정"으로 채운 내용이 이 브라우저에만 저장되고 서버에는 반영 안 된 사진들을 지금 서버로 다시 올립니다.</div>
       <button class="btn btn-primary" id="resyncAllBtn" onclick="resyncAllToCloud()">♻️ 로컬 수정 내용 서버로 재동기화</button>
     </div>
 
     <div style="margin-bottom:18px;">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;" id="folderSectionTitle">📁 작업 분류 폴더 관리</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:10px;" id="folderSectionTitle">📁 작업 분류 폴더 관리</div>
       <div class="folder-list" id="folderList"></div>
       <div class="add-row">
         <input type="text" id="newCat" placeholder="새 분류 이름...">
@@ -680,7 +680,7 @@ html.view-only .adm-only { display: none !important; }
     </div>
 
     <div style="margin-bottom:18px;">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">📍 작업구역 관리</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:10px;">📍 작업구역 관리</div>
       <div class="chip-row" id="areaChips"></div>
       <div class="add-row">
         <input type="text" id="newArea" placeholder="새 구역 이름...">
@@ -689,7 +689,7 @@ html.view-only .adm-only { display: none !important; }
     </div>
 
     <div style="margin-bottom:18px;">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">👥 팀명 관리</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:10px;">👥 팀명 관리</div>
       <div class="chip-row" id="teamChips"></div>
       <div class="add-row">
         <input type="text" id="newTeam" placeholder="새 팀명 입력...">
@@ -698,7 +698,7 @@ html.view-only .adm-only { display: none !important; }
     </div>
 
     <div style="margin-bottom:18px;">
-      <div style="font-size:0.8rem;font-weight:700;color:#2E5F9E;margin-bottom:10px;">📝 특이사항 프리셋</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#3ed6c9;margin-bottom:10px;">📝 특이사항 프리셋</div>
       <div class="chip-row" id="notePresetChips"></div>
       <div class="add-row">
         <input type="text" id="newNotePreset" placeholder="자주 쓰는 특이사항...">
@@ -1279,7 +1279,7 @@ let notePresets = [];
 // ── 상위 메뉴 (시공/품질/자재/안전/화기유도) ─────────────
 const MENUS = ['시공','품질','자재','안전','화기/유도'];
 const MENU_THEMES = {
-  '시공':      ['#2f81f7','#58a6ff'],
+  '시공':      ['#12b3a8','#3ed6c9'],
   '품질':      ['#27AE60','#58D68D'],
   '자재':      ['#A0703A','#C9986B'],
   '안전':      ['#F39C12','#F5B041'],
