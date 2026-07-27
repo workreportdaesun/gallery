@@ -286,7 +286,7 @@ html.view-only .adm-only { display: none !important; }
     <span class="hdr-logo-txt">사진관리</span>
   </div>
   <div class="hdr-right">
-    <div class="hdr-crumb" id="hdrCrumb"><span class="cc">전체 사진</span></div>
+    <div class="hdr-crumb" id="hdrCrumb"></div>
     <div class="hdr-crumb" id="hdrProjectCompany" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;"></div>
   </div>
 </div>
@@ -2259,7 +2259,7 @@ function downloadPhoto(id) {
 function updateHeader() {
   const el = document.getElementById('hdrCrumb');
   if (selOtherFolder) { el.innerHTML = `<span class="cc">📁 기타</span>`; return; }
-  if (!selCat) { el.innerHTML = `<span class="cc">전체 사진</span>`; return; }
+  if (!selCat) { el.innerHTML = ``; return; }
   const m = selWt ? (WT_META[selWt]||{icon:'📷'}) : null;
   el.innerHTML = `<span class="cc">${selCat}</span>` +
     (selWt ? `<span class="cs">›</span><span class="cc">${m.icon} ${selWt}</span>` : '');
