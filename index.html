@@ -46,7 +46,7 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .hdr .hdr-menu-btn { border-color: rgba(255,255,255,0.35); color: #fff; }
 
 /* 상위 메뉴 */
-.menu-tabs { display: flex; gap: 6px; background: var(--sf); border-bottom: 1px solid var(--bd); padding: 8px 14px; flex-shrink: 0; }
+.menu-tabs { display: flex; align-items: center; gap: 6px; background: var(--sf); border-bottom: 1px solid var(--bd); padding: 8px 14px; flex-shrink: 0; flex-wrap: wrap; }
 .menu-tab { flex: 0 0 auto; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--bd); background: var(--bg); color: var(--tx2); font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; }
 .menu-tab.active { background: var(--ac); border-color: var(--ac); color: #fff; }
 .menu-tab[data-menu="자재"] { border-color: rgba(160,112,58,.45); color: #C9986B; }
@@ -287,16 +287,7 @@ html.view-only .adm-only { display: none !important; }
   </div>
   <div class="hdr-right">
     <div class="hdr-crumb" id="hdrCrumb"><span class="cc">전체 사진</span></div>
-    <div class="hdr-crumb" id="hdrProjectCompany" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-    <div class="spacer"></div>
-    <button class="btn btn-ghost adm-only" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
-    <button class="btn btn-ghost adm-only" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
-    <button class="btn btn-ghost adm-only" onclick="openPhotoSheet()" title="사진대지 생성기 열기">🖨️ 사진대지 생성기</button>
-    <button class="btn btn-ghost adm-only" id="folderBtn" onclick="handleFolderBtnClick()" title="PC 폴더 지정 / 불러오기">📂 PC 폴더 지정</button>
-    <button class="btn btn-ghost" id="dupFilterBtn" onclick="toggleDupFilter()" title="같은 기기번호가 여러 장인 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
-    <button class="btn btn-ghost" id="incompleteFilterBtn" onclick="toggleIncompleteFilter()" title="작업분류·기기번호·작업구역·팀명 중 하나라도 비어있는 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
-    <button class="btn btn-primary adm-only" onclick="openUpload()">+ 사진 추가</button>
-    <button class="btn btn-ghost adm-only" onclick="openSettings()" title="설정">⚙️</button>
+    <div class="hdr-crumb" id="hdrProjectCompany" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;"></div>
   </div>
 </div>
 
@@ -313,6 +304,14 @@ html.view-only .adm-only { display: none !important; }
   <button type="button" class="menu-tab" data-menu="자재" onclick="setActiveMenu('자재')">자재</button>
   <button type="button" class="menu-tab" data-menu="안전" onclick="setActiveMenu('안전')">안전</button>
   <button type="button" class="menu-tab" data-menu="화기/유도" onclick="setActiveMenu('화기/유도')">화기/유도</button>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost adm-only" id="syncBtn" onclick="openSyncFilter()" title="클라우드에서 사진 가져오기">☁️ 동기화</button>
+  <button class="btn btn-ghost adm-only" onclick="openBatch()" title="OCR로 전체 자동 분류">🔄 자동 분류</button>
+  <button class="btn btn-ghost adm-only" id="folderBtn" onclick="handleFolderBtnClick()" title="PC 폴더 지정 / 불러오기">📂 PC 폴더 지정</button>
+  <button class="btn btn-ghost" id="dupFilterBtn" onclick="toggleDupFilter()" title="같은 기기번호가 여러 장인 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
+  <button class="btn btn-ghost" id="incompleteFilterBtn" onclick="toggleIncompleteFilter()" title="작업분류·기기번호·작업구역·팀명 중 하나라도 비어있는 사진만 모아보기" style="display:none;color:var(--orange);border-color:rgba(240,136,62,.4);"></button>
+  <button class="btn btn-primary adm-only" onclick="openUpload()">+ 사진 추가</button>
+  <button class="btn btn-ghost adm-only" onclick="openSettings()" title="설정">⚙️</button>
 </div>
 
 <!-- 앱 바디 -->
@@ -331,6 +330,14 @@ html.view-only .adm-only { display: none !important; }
     <div class="sb-sep"></div>
     <div class="sb-section-lbl">작업 구분</div>
     <div class="sb-list" id="sbList"></div>
+    <div class="sb-sep adm-only"></div>
+    <div class="sb-section-lbl adm-only">도구</div>
+    <div class="sb-top adm-only" style="padding-top:0;">
+      <div class="sb-all" onclick="openPhotoSheet()">
+        <span>🖨️</span>
+        <span style="flex:1">사진대지 생성기</span>
+      </div>
+    </div>
   </div>
 
   <!-- 컨텐츠 -->
@@ -2251,9 +2258,8 @@ function downloadPhoto(id) {
 // ── 헤더 브레드크럼 ──────────────────────────────────
 function updateHeader() {
   const el = document.getElementById('hdrCrumb');
-  const menuCount = photos.filter(p => (p.menu||'시공') === activeMenu).length;
   if (selOtherFolder) { el.innerHTML = `<span class="cc">📁 기타</span>`; return; }
-  if (!selCat) { el.innerHTML = `<span class="cc">전체 사진</span><span class="cs">&nbsp;총 ${menuCount}장</span>`; return; }
+  if (!selCat) { el.innerHTML = `<span class="cc">전체 사진</span>`; return; }
   const m = selWt ? (WT_META[selWt]||{icon:'📷'}) : null;
   el.innerHTML = `<span class="cc">${selCat}</span>` +
     (selWt ? `<span class="cs">›</span><span class="cc">${m.icon} ${selWt}</span>` : '');
