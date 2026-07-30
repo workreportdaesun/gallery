@@ -1266,7 +1266,7 @@ async function loadFromFolder() {
 }
 
 // ── 상태 ────────────────────────────────────────────
-let db, photos = [], pendingFiles = [], selectedFileIndex = 0;
+let db, photos = [], pendingFiles = [], pendingMeta = [], selectedFileIndex = 0;
 let selCat = null, selWt = null;
 let selOtherFolder = false; // 사이드바 "기타" 폴더 선택 여부
 // "기타" 폴더 소속 판정: 작업구분(wt)이 신규/수정 어디에도 안 맞는 사진만 기타로 분류한다.
@@ -1286,7 +1286,7 @@ let currentDetailIndex = -1; // 현재 사진이 필터 목록에서 마지막�
 let detZoom = 1, detPanX = 0, detPanY = 0, detDragging = false;
 let detDragStartX = 0, detDragStartY = 0, detPanStartX = 0, detPanStartY = 0;
 const DET_ZOOM_MIN = 1, DET_ZOOM_MAX = 5;
-let ocrWorker = null, currentOCRAbort = false, currentAnalysisFile = null;
+let ocrWorker = null, currentOCRAbort = false, currentAnalysisFile = null, currentAnalysisIndex = -1;
 
 let teams = ['A팀','B팀','C팀','D팀'];
 let areas = ['SCC','U&O'];
@@ -2413,12 +2413,81 @@ for (const tm of teams) { if (base.includes(tm)) { r.team = tm; break; } }
 }
 
 // ── 업로드 모달 ──────────────────────────────────────
+// 여러 장을 한 번에 불러왔을 때 사진마다 다른 기기번호/분류/날짜 등을 가질 수 있도록,
+// 화면의 입력 필드는 하나뿐이지만 "지금 선택된 사진"의 값만 보여주고 다른 사진으로
+// 넘어갈 때 그 사진 몫으로 스냅샷을 떠서 pendingMeta[]에 각각 따로 저장한다.
+function snapshotForm(){
+  const wtChecked = document.querySelector('input[name="upWt"]:checked');
+  return {
+    date: document.getElementById('upDate').value,
+    time: document.getElementById('upTime').value,
+    tag:  document.getElementById('upTag').value.trim(),
+    cat:  document.getElementById('upCat').value,
+    team: document.getElementById('upTeam').value,
+    area: document.getElementById('upArea').value,
+    note: document.getElementById('upNote').value.trim(),
+    wtRadio: wtChecked ? wtChecked.value : document.getElementById('upWtNew').value,
+    wtPhase: document.getElementById('upPhase').value,
+    me: {
+      date: !!document.getElementById('upDate').dataset.me,
+      time: !!document.getElementById('upTime').dataset.me,
+      tag:  !!document.getElementById('upTag').dataset.me,
+      cat:  !!document.getElementById('upCat').dataset.me,
+      team: !!document.getElementById('upTeam').dataset.me,
+      note: !!document.getElementById('upNote').dataset.me,
+      wt:   !!document.getElementById('wtRg').dataset.me,
+    },
+    badge: {
+      tag:  document.getElementById('tagBadge').style.display  !== 'none',
+      date: document.getElementById('dateBadge').style.display !== 'none',
+      time: document.getElementById('timeBadge').style.display !== 'none',
+      wt:   document.getElementById('wtBadge').style.display   !== 'none',
+      cat:  document.getElementById('catBadge').style.display  !== 'none',
+      team: document.getElementById('teamBadge').style.display !== 'none',
+      note: document.getElementById('noteBadge').style.display !== 'none',
+    }
+  };
+}
+function applyMetaToForm(meta){
+  document.getElementById('upDate').value = meta.date;
+  document.getElementById('upTime').value = meta.time;
+  document.getElementById('upTag').value  = meta.tag;
+  document.getElementById('upCat').value  = meta.cat;
+  document.getElementById('upTeam').value = meta.team;
+  document.getElementById('upArea').value = meta.area;
+  document.getElementById('upNote').value = meta.note;
+
+  const radio = document.querySelector(`input[name="upWt"][value="${meta.wtRadio}"]`) || document.getElementById('upWtNew');
+  radio.checked = true;
+  toggleUpPhase();
+  if (meta.wtPhase) document.getElementById('upPhase').value = meta.wtPhase;
+
+  document.getElementById('upDate').dataset.me = meta.me.date ? '1' : '';
+  document.getElementById('upTime').dataset.me = meta.me.time ? '1' : '';
+  document.getElementById('upTag').dataset.me  = meta.me.tag  ? '1' : '';
+  document.getElementById('upCat').dataset.me  = meta.me.cat  ? '1' : '';
+  document.getElementById('upTeam').dataset.me = meta.me.team ? '1' : '';
+  document.getElementById('upNote').dataset.me = meta.me.note ? '1' : '';
+  document.getElementById('wtRg').dataset.me   = meta.me.wt   ? '1' : '';
+
+  document.getElementById('tagBadge').style.display  = meta.badge.tag  ? '' : 'none';
+  document.getElementById('dateBadge').style.display = meta.badge.date ? '' : 'none';
+  document.getElementById('timeBadge').style.display = meta.badge.time ? '' : 'none';
+  document.getElementById('wtBadge').style.display   = meta.badge.wt   ? '' : 'none';
+  document.getElementById('catBadge').style.display  = meta.badge.cat  ? '' : 'none';
+  document.getElementById('teamBadge').style.display = meta.badge.team ? '' : 'none';
+  document.getElementById('noteBadge').style.display = meta.badge.note ? '' : 'none';
+}
 function selectPreviewFile(index) {
+  if (selectedFileIndex !== index && pendingFiles[selectedFileIndex]) {
+    pendingMeta[selectedFileIndex] = snapshotForm(); // 떠나기 전에 지금 사진 몫 값을 저장
+  }
   const prev = selectedFileIndex;
   selectedFileIndex = index;
   document.querySelectorAll('#upList .up-list-item').forEach((el,i) => el.classList.toggle('sel', i===index));
   const file = pendingFiles[index];
   if (!file) return;
+  applyMetaToForm(pendingMeta[index]);
   const reader = new FileReader();
   reader.onload = ev => {
     document.getElementById('upZone').innerHTML =
@@ -2426,7 +2495,7 @@ function selectPreviewFile(index) {
        <div style="font-size:0.67rem;color:var(--tx3);">클릭하여 파일 변경</div>`;
   };
   reader.readAsDataURL(file);
-  if (prev !== index) runFileAnalysis(file);
+  if (prev !== index) runFileAnalysis(file, index);
 }
 
 const UP_ZONE_INIT = `<div class="up-zone-ico">📂</div>
@@ -2442,7 +2511,7 @@ function openPhotoSheet() {
 }
 
 function openUpload() {
-  pendingFiles=[]; selectedFileIndex=0;
+  pendingFiles=[]; pendingMeta=[]; selectedFileIndex=0;
   document.getElementById('upList').innerHTML='';
   document.getElementById('upZone').innerHTML=UP_ZONE_INIT;
   document.getElementById('upProg').style.display='none';
@@ -2470,9 +2539,12 @@ function closeUpload() {
 async function handleFiles(files) {
   if(!files||!files.length) return;
   pendingFiles = Array.from(files);
+  const template = snapshotForm(); // 지금 화면(기본값)을 새로 불러온 사진들의 초기값으로 사용
+  pendingMeta = pendingFiles.map(()=>({...template, me:{...template.me}, badge:{...template.badge}}));
   document.getElementById('upList').innerHTML = pendingFiles.map((f,i)=>
     `<div class="up-list-item" onclick="selectPreviewFile(${i})">📄 ${f.name} (${(f.size/1024).toFixed(0)}KB)</div>`
   ).join('');
+  selectedFileIndex = -1; // 첫 사진도 "전환"으로 취급해 자동분석(EXIF/OCR)이 돌도록 함
   selectPreviewFile(0);
 }
 
@@ -2490,11 +2562,12 @@ function resetAutoFills() {
   }
 }
 
-async function runFileAnalysis(file) {
+async function runFileAnalysis(file, index) {
   currentOCRAbort=true;
   await new Promise(r=>setTimeout(r,30));
   currentOCRAbort=false;
   currentAnalysisFile=file;
+  currentAnalysisIndex=index;
 
   resetAutoFills();
 
@@ -2549,6 +2622,8 @@ async function runFileAnalysis(file) {
   } catch(e) {
     if(!currentOCRAbort){ocrIcon.className=''; ocrIcon.textContent='❌'; ocrStatus.textContent='OCR 실패'; retryBtn.style.display='';}
   }
+  // 분석 도중 사용자가 다른 사진으로 넘어가지 않았을 때만, 방금 채운 값을 이 사진 몫으로 저장
+  if (!currentOCRAbort && selectedFileIndex === index) pendingMeta[index] = snapshotForm();
 }
 
 function afAuto(field, val, badgeId) {
@@ -2560,7 +2635,7 @@ function afAuto(field, val, badgeId) {
 }
 
 function retryOCR() {
-  if (currentAnalysisFile) runFileAnalysis(currentAnalysisFile);
+  if (currentAnalysisFile) runFileAnalysis(currentAnalysisFile, currentAnalysisIndex);
 }
 
 ['upTag','upNote','upDate','upTime'].forEach(id=>{
@@ -2589,6 +2664,15 @@ function computeWt(radioGroupName, phaseSelId){
     const ph=document.getElementById(phaseSelId);
     return (ph && ph.value) || phases[0];
   }
+  return v;
+}
+
+// computeWt()의 pendingMeta 버전 — DOM이 아니라 사진별로 저장된 wtRadio/wtPhase로 계산
+function wtFromMeta(meta){
+  const w = WT_LABELS_BY_MENU[activeMenu] || WT_LABELS_BY_MENU['시공'];
+  const v = meta.wtRadio || w.new;
+  const phases = wtPhasesFor(v, w);
+  if(phases) return meta.wtPhase || phases[0];
   return v;
 }
 
@@ -2638,16 +2722,9 @@ async function uploadPhotoToCloud(p, file, idx){
 }
 
 async function savePhotos(){
-  const date=document.getElementById('upDate').value;
-  if(!date){alert('날짜를 입력해 주세요.');return;}
-  const cat =document.getElementById('upCat').value;
-  const wt  =computeWt('upWt','upPhase');
-  const time=document.getElementById('upTime').value;
-  const tag =document.getElementById('upTag').value.trim();
-  const team=document.getElementById('upTeam').value;
-  const area=document.getElementById('upArea').value;
-  const note=document.getElementById('upNote').value.trim();
   if(!pendingFiles.length){alert('사진을 선택해 주세요.');return;}
+  if (pendingFiles[selectedFileIndex]) pendingMeta[selectedFileIndex] = snapshotForm(); // 지금 보고 있는 사진 몫 반영
+  for (const m of pendingMeta) { if (!m.date) { alert('날짜를 입력해 주세요.'); return; } }
 
   const btn=document.getElementById('upSaveBtn');
   btn.disabled=true; btn.textContent='저장 중...';
@@ -2655,13 +2732,15 @@ async function savePhotos(){
   document.getElementById('upProg').style.display='block';
   document.getElementById('upProgLbl').textContent=`0 / ${pendingFiles.length}장 저장 중...`;
   const total=pendingFiles.length;
+  let lastCat=null, lastWt=null;
 
   for(let i=0;i<total;i++){
     const f=pendingFiles[i];
+    const meta=pendingMeta[i];
+    const wt=wtFromMeta(meta);
     document.getElementById('upProgLbl').textContent=`${i+1} / ${total}장 인식 중...`;
     const dataUrl=await fileToDataUrl(f);
-    // 여러 장을 한 번에 선택해도 입력창 값은 전부 공유되므로, 사진마다 이미 찍혀있는
-    // 워터마크를 각각 OCR로 읽어서(있으면) 그 사진만의 값으로 우선 적용한다.
+    // 사진마다 이미 찍혀있는 워터마크를 각각 OCR로 읽어서(있으면) 이 사진 몫 입력값보다 우선 적용한다.
     let ocrInfo={};
     try{
       const cropBlob=await cropWatermarkRegion(dataUrl);
@@ -2671,24 +2750,26 @@ async function savePhotos(){
     }catch(e){ console.warn('[업로드 OCR] 인식 실패, 입력값으로 대체:',e); }
     const p={
       id:Date.now()+Math.random(),
-      date: ocrInfo.date||date, time: ocrInfo.time||time,
-      tag:  ocrInfo.tag||tag,
-      cat:  (ocrInfo.cat && cats.includes(ocrInfo.cat)) ? ocrInfo.cat : cat,
+      date: ocrInfo.date||meta.date, time: ocrInfo.time||meta.time,
+      tag:  ocrInfo.tag||meta.tag,
+      cat:  (ocrInfo.cat && cats.includes(ocrInfo.cat)) ? ocrInfo.cat : meta.cat,
       wt:   ocrInfo.wt||wt,
-      area: (ocrInfo.loc && areas.includes(ocrInfo.loc)) ? ocrInfo.loc : area,
-      team: ocrInfo.team||team,
-      note: ocrInfo.note||note,
+      area: (ocrInfo.loc && areas.includes(ocrInfo.loc)) ? ocrInfo.loc : meta.area,
+      team: ocrInfo.team||meta.team,
+      note: ocrInfo.note||meta.note,
       name:f.name,size:f.size,dataUrl,created:new Date().toISOString(),menu:activeMenu
     };
     document.getElementById('upProgLbl').textContent=`${i+1} / ${total}장 저장 중...`;
     await uploadPhotoToCloud(p, f, i); // 성공하면 p.cloud_url/p.name이 클라우드 기준으로 갱신됨(실패해도 로컬 저장은 계속 진행)
     await savePhotoToDB(p); photos.unshift(p);
     bar.style.width=`${((i+1)/total)*100}%`;
+    lastCat=p.cat; lastWt=p.wt;
   }
 
   photos.sort((a,b)=>(b.date+b.created).localeCompare(a.date+a.created));
 
-  selCat=cat; selWt=workTypeFolderName(wt);
+  if(lastCat) selCat=lastCat;
+  if(lastWt) selWt=workTypeFolderName(lastWt);
   resetFilter();
   populateDateFilter();
   renderSidebar(); renderPhotos(); updateHeader(); closeUpload();
