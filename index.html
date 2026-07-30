@@ -2434,18 +2434,11 @@ const UP_ZONE_INIT = `<div class="up-zone-ico">📂</div>
       <div class="up-zone-sub">JPG, PNG, HEIC 지원 · 여러 장 선택 가능</div>`;
 
 function openPhotoSheet() {
-  // 사진대지 생성기(work-log)는 이 PC에서만 도는 로컬 Flask 서버(포트 5183).
-  // file://로 직접 연 경우(open-gallery.bat) 또는 같은 PC/사내망에서 접속한 경우에만 연결 가능하고,
-  // GitHub Pages 같은 외부 공개 주소로 접속했을 때는 서버에 닿을 방법이 없음.
-  var h = location.hostname;
-  var isLocal = (location.protocol === 'file:') || h === 'localhost' || h === '127.0.0.1'
-    || /^192\.168\.\d+\.\d+$/.test(h) || /^10\.\d+\.\d+\.\d+$/.test(h) || /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(h);
-  if (!isLocal) {
-    alert('사진대지 생성기는 이 PC(사무실 컴퓨터)에서만 사용할 수 있습니다.\nopen-gallery.bat으로 열어주세요.');
-    return;
-  }
-  var host = (location.protocol === 'file:') ? '127.0.0.1' : h;
-  window.open('http://' + host + ':5183/', '_blank');
+  // 사진대지 생성기(work-log)는 이 버튼을 누르는 PC에서 도는 로컬 Flask 서버(포트 5183).
+  // 이 JS는 브라우저(클라이언트)에서 실행되므로 gallery 페이지가 어디서 서빙되든
+  // (file://, GitHub Pages 등) 상관없이 항상 127.0.0.1로 접속을 시도 — 이 PC에 work-log가
+  // 켜져 있으면 원격 주소로 봐도 정상 연결되고, 꺼져 있으면 새 탭에서 접속 실패로 뜬다.
+  window.open('http://127.0.0.1:5183/', '_blank');
 }
 
 function openUpload() {
