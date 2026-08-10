@@ -834,7 +834,7 @@ async function syncFromSupabase(filters){
       if(rec.loc && !p.area){ p.area=rec.loc; changed=true; }
       if(!p.menu){ p.menu=rec.menu||'시공'; changed=true; }
       // 작업분류가 아직 없으면(자동 분류 전) Others로 채워서 사이드바 어딘가에는 항상 보이게 한다
-      if(!p.cat){ p.cat=rec.cat||'Others'; changed=true; }
+      if(!p.cat){ p.cat=rec.cat||'OTHERS'; changed=true; }
       if(p.cloud_id==null && rec.id!=null){ p.cloud_id=rec.id; changed=true; }
       if(rec.photo_url && rec.photo_url!==p.cloud_url){
         p.cloud_url=rec.photo_url;
@@ -879,7 +879,7 @@ async function syncFromSupabase(filters){
         const photo={
           id:Date.now()+Math.random(),
           date:rec.date||'', time:rec.time||'', tag:rec.tag||'',
-          cat:rec.cat||'Others', wt:rec.work_type||'', team:rec.sender||'',
+          cat:rec.cat||'OTHERS', wt:rec.work_type||'', team:rec.sender||'',
           area:rec.loc||'', note:rec.note||'', name:fname,
           size:blob.size, dataUrl,
           created:rec.created_at||rec.date||new Date().toISOString(),
@@ -1014,7 +1014,7 @@ function handleFolderBtnClick(){
 // 폴더/파일명으로 쓸 수 없는 문자 제거 (Windows 예약문자 \ / : * ? " < > | 포함, 빈 값 방지)
 function sanitizeFolderName(name) {
   const cleaned = String(name == null ? '' : name).replace(/[\\/:*?"<>|]/g, '_').trim();
-  return cleaned || 'Others';
+  return cleaned || 'OTHERS';
 }
 
 // 시공/품질은 수정 선택 시 변경전/변경후로, 시공은 신규 선택 시 진행중/완료로 세분화되지만
@@ -1150,7 +1150,7 @@ async function loadFromFolder() {
         id: Date.now() + Math.random(),
         name, date: parsed.date||'', time: parsed.time||'',
         tag: parsed.tag||'', wt: parsed.wt || wtFolder || '',
-        cat: cat || parsed.cat || 'Others',
+        cat: cat || parsed.cat || 'OTHERS',
         team:'', area: area||'', note:'', menu: menuFolder || activeMenu,
         size: file.size, dataUrl,
         created: file.lastModified
@@ -1192,7 +1192,7 @@ async function loadFromFolder() {
   async function scanCatLevel(catParentHandle, menu, area) {
     for await (const [catName, catHandle] of catParentHandle.entries()) {
       if (catHandle.kind !== 'directory') continue;
-      const cat = (catName === 'Others') ? '' : catName;
+      const cat = (catName === 'OTHERS') ? '' : catName;
       await scanWtLevel(catHandle, cat, menu, area);
     }
   }
@@ -1201,7 +1201,7 @@ async function loadFromFolder() {
   async function scanOldWtThenCat(wtParentHandle, wtFolder, menu) {
     for await (const [catName, catHandle] of wtParentHandle.entries()) {
       if (catHandle.kind !== 'directory') continue;
-      const cat = (catName === 'Others') ? '' : catName;
+      const cat = (catName === 'OTHERS') ? '' : catName;
       for await (const [subName, subHandle] of catHandle.entries()) {
         if (subHandle.kind !== 'file') continue;
         if (!/\.(jpg|jpeg|png)$/i.test(subName)) continue;
@@ -1223,7 +1223,7 @@ async function loadFromFolder() {
         await scanOldWtThenCat(handle, name, menu);
       } else {
         // 더 예전 구조: 메뉴 > 작업분류 > 파일
-        const cat = (name === 'Others') ? '' : name;
+        const cat = (name === 'OTHERS') ? '' : name;
         await scanWtLevel(handle, cat, menu, '');
       }
     }
@@ -1238,7 +1238,7 @@ async function loadFromFolder() {
         await scanOldWtThenCat(handle, name, '');
       } else if (handle.kind === 'directory') {
         // 가장 예전 구조: 작업분류 폴더만
-        const cat = (name === 'Others') ? '' : name;
+        const cat = (name === 'OTHERS') ? '' : name;
         for await (const [subName, subHandle] of handle.entries()) {
           if (subHandle.kind !== 'file') continue;
           if (!/\.(jpg|jpeg|png)$/i.test(subName)) continue;
@@ -1318,12 +1318,11 @@ function wtPhasesFor(radioValue, w) {
   return null;
 }
 const DEFAULT_CATS_시공 = [
-  'DCS Panel','LCP','Junction Box','Field Instrument',
-  'Cable Duct','Cable Tray','Conduit Pipe','Air Pipe',
-  'Hook Up','Stanchion','Support','Connection',
-  'Line Check','Loop Test','Leak Test',
-  'Instrument Calibration','Steam Tracing Tube',
-  'Steam Tracing Insulation','Scaffolding','Others','관리자'
+  'DCS PANEL','LCP','JUNCTION BOX','INSTRUMENT',
+  'CABLE DUCT','CABLE TRAY','CABLE PULLING','CONNECTION',
+  'CONDUIT PIPE','AIR PIPE','HOOK UP','SUPPORT','STANCHION',
+  'STEAM TRACING','SCAFFOLDING','LINE CHECK','LOOP TEST',
+  'CALIBRATION','LEAK TEST','OTHERS','관리자','장비작업'
 ];
 const DEFAULT_CATS_안전 = ['개인보호구','안전난간','소화기','전기안전','고소작업','위험물보관','비상통로','중장비안전','밀폐공간','낙하물방지','기타'];
 const DEFAULT_CATS_화기유도 = ['용접작업','절단작업','화재감시','가연물제거','방화포','가스누출점검','소화기배치','유도원배치','차량유도','작업구간통제','기타'];
@@ -1460,7 +1459,7 @@ async function startBatch() {
   const catFilter = document.getElementById('batchCatFilter').value;
   const menuPhotos = photos.filter(p => (p.menu||'시공') === activeMenu);
   let targets = mode === 'uncat'
-    ? menuPhotos.filter(p => !p.cat || p.cat === 'Others')
+    ? menuPhotos.filter(p => !p.cat || p.cat === 'OTHERS')
     : menuPhotos;
   // 작업분류를 지정하면 그 분류(폴더)에 속한 사진으로만 더 좁혀서 재분석한다.
   // "미분류만"과 같이 쓰면 정의상 대상이 없을 수 있음(미분류 사진엔 분류가 없으므로) — 의도된 동작.
@@ -2039,7 +2038,7 @@ function renderSidebar() {
       <select class="sb-cat-dropdown" onchange='selectCatUnderWt(${J(wt)}, this.value)'>
         <option value="">-- 분류 전체 --</option>
         ${enabledList.map(c => {
-          const cnt = wtPhotos.filter(p => (p.cat||'Others') === c).length;
+          const cnt = wtPhotos.filter(p => (p.cat||'OTHERS') === c).length;
           return `<option value="${c}"${selCat===c?' selected':''}>${c}${cnt?` (${cnt})`:''}</option>`;
         }).join('')}
       </select>` : '';
@@ -2125,7 +2124,7 @@ function updateDupBadge(){
 
 // ── 작업분류·기기번호·작업구역·팀명 미입력 확인 ─────────
 function isIncomplete(p){
-  return !p.cat || p.cat==='Others' || !normTag(p.tag) || normTag(p.tag)==='-' || !p.area || !p.team;
+  return !p.cat || p.cat==='OTHERS' || !normTag(p.tag) || normTag(p.tag)==='-' || !p.area || !p.team;
 }
 let incompleteFilterOn = false;
 function toggleIncompleteFilter(){
@@ -2167,7 +2166,7 @@ function getFiltered() {
   return photos.filter(p =>
     (p.menu||'시공') === activeMenu &&
     (!selOtherFolder || isOtherFolder(p)) &&
-    (selOtherFolder || selCat === null || (p.cat||'Others') === selCat) &&
+    (selOtherFolder || selCat === null || (p.cat||'OTHERS') === selCat) &&
     (selOtherFolder || selWt === null || workTypeFolderName(p.wt) === selWt) &&
     (!date   || p.date === date) &&
     (!team   || p.team === team) &&
@@ -2191,8 +2190,8 @@ function renderPhotos() {
     const menuPhotosForCount = photos.filter(p => (p.menu||'시공') === activeMenu);
     base = selCat === null && selWt === null ? menuPhotosForCount.length
          : selCat === null ? menuPhotosForCount.filter(p=>workTypeFolderName(p.wt)===selWt).length
-         : selWt  === null ? menuPhotosForCount.filter(p=>(p.cat||'Others')===selCat).length
-         : menuPhotosForCount.filter(p=>(p.cat||'Others')===selCat&&workTypeFolderName(p.wt)===selWt).length;
+         : selWt  === null ? menuPhotosForCount.filter(p=>(p.cat||'OTHERS')===selCat).length
+         : menuPhotosForCount.filter(p=>(p.cat||'OTHERS')===selCat&&workTypeFolderName(p.wt)===selWt).length;
   }
   document.getElementById('fCount').textContent = filtered.length !== base
     ? `${filtered.length} / ${base}장` : `${base}장`;
@@ -2211,7 +2210,7 @@ function renderPhotos() {
   let html = '';
   if (showCatHeader) {
     const groups = {};
-    filtered.forEach(p => { const k=p.cat||'Others'; if(!groups[k])groups[k]=[]; groups[k].push(p); });
+    filtered.forEach(p => { const k=p.cat||'OTHERS'; if(!groups[k])groups[k]=[]; groups[k].push(p); });
     const sortedKeys = Object.keys(groups).sort((a,b)=>(cats.indexOf(a)<0?999:cats.indexOf(a))-(cats.indexOf(b)<0?999:cats.indexOf(b)));
     sortedKeys.forEach(k => {
       html += `<div style="margin-bottom:6px;margin-top:14px;font-size:0.75rem;font-weight:700;color:var(--tx2);">${k} <span style="font-weight:400;color:var(--tx3);">${groups[k].length}장</span></div>`;
@@ -2232,7 +2231,7 @@ function photoCard(p) {
     <img src="${getPhotoImgSrc(p)}" alt="${p.name||''}" loading="lazy">
     <button class="pc-dl-btn" onclick="event.stopPropagation();downloadPhoto(${J(sid)})" title="다운로드">⬇</button>
     <div class="pc-body">
-      ${selCat===null?`<div class="pc-cat">${p.cat||'Others'}</div>`:''}
+      ${selCat===null?`<div class="pc-cat">${p.cat||'OTHERS'}</div>`:''}
       <div class="pc-date">${p.date}${p.time?' · '+p.time:''}</div>
       <div class="pc-tag">${p.tag||'—'}</div>
       <div class="pc-badges">
@@ -3163,7 +3162,7 @@ function closeSettings(){ document.getElementById('setOverlay').classList.remove
 function renderFolderList(){
   const el=document.getElementById('folderList');
   el.innerHTML=cats.map((cat,i)=>{
-    const cnt=photos.filter(p=>(p.cat||'Others')===cat && (p.menu||'시공')===activeMenu).length;
+    const cnt=photos.filter(p=>(p.cat||'OTHERS')===cat && (p.menu||'시공')===activeMenu).length;
     return`<div class="folder-item">
       <label>
         <input type="checkbox" ${enabledCats.has(cat)?'checked':''} onchange='toggleFolder(${J(cat)},this.checked)'>
@@ -3218,7 +3217,7 @@ function addCat(){
 }
 function removeCat(i){
   const cat=cats[i];
-  if(photos.some(p=>(p.cat||'Others')===cat && (p.menu||'시공')===activeMenu)){alert(`"${cat}"에 사진이 있어 삭제할 수 없습니다.`);return;}
+  if(photos.some(p=>(p.cat||'OTHERS')===cat && (p.menu||'시공')===activeMenu)){alert(`"${cat}"에 사진이 있어 삭제할 수 없습니다.`);return;}
   cats.splice(i,1); enabledCats.delete(cat);
   saveSettings(); renderSidebar(); renderFolderList();
 }
