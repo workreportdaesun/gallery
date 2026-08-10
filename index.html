@@ -1017,11 +1017,13 @@ function sanitizeFolderName(name) {
   return cleaned || 'OTHERS';
 }
 
-// 시공/품질은 수정 선택 시 변경전/변경후로, 시공은 신규 선택 시 진행중/완료로 세분화되지만
+// 시공/품질은 수정 선택 시 변경전/변경후로, 시공은 신규 선택 시 진행/완료로 세분화되지만
 // 폴더는 각각 "수정"/"신규" 하나로 묶음
+// '진행중'은 이 앱만 쓰던 옛 표기 — 작업일보 기준인 '진행'으로 통일했고(2026-08-10),
+// PC에 이미 만들어진 옛 폴더와 옛 워터마크 때문에 읽기 쪽에서만 계속 받아준다.
 function workTypeFolderName(wt) {
   if (wt === '변경전' || wt === '변경후' || wt === '수정-작업전' || wt === '수정-작업후') return '수정';
-  if (wt === '진행중' || wt === '완료') return '신규';
+  if (wt === '진행' || wt === '진행중' || wt === '완료') return '신규';
   return wt || '기타';
 }
 
@@ -1290,7 +1292,9 @@ let detDragStartX = 0, detDragStartY = 0, detPanStartX = 0, detPanStartY = 0;
 const DET_ZOOM_MIN = 1, DET_ZOOM_MAX = 5;
 let ocrWorker = null, currentOCRAbort = false, currentAnalysisFile = null, currentAnalysisIndex = -1;
 
-let teams = ['A팀','B팀','C팀','D팀'];
+// 작업일보(work-report-daesun)의 customPersonnel + '관리'와 같은 목록으로 맞춤(2026-08-10).
+// 예전엔 A팀~D팀이라는 이 앱에만 있는 이름이라 일보와 팀 이름이 서로 안 맞았다.
+let teams = ['1팀(계장)','2팀(계장)','품질팀','안전관리팀','관리'];
 let areas = ['SCC','U&O'];
 let notePresets = [];
 
@@ -1305,7 +1309,7 @@ const MENU_THEMES = {
 };
 // 메뉴별 작업구분 라벨. newPhases/modPhases가 있는 메뉴만 신규/수정 선택 시 해당 하위 단계 드롭다운 표시
 const WT_LABELS_BY_MENU = {
-  '시공':      { new:'신규',       mod:'수정',     newPhases:['진행중','완료'], modPhases:['변경전','변경후'] },
+  '시공':      { new:'신규',       mod:'수정',     newPhases:['진행','완료'], modPhases:['변경전','변경후'] },
   '품질':      { new:'신규',       mod:'수정',     modPhases:['변경전','변경후'] },
   '자재':      { new:'도급',       mod:'사급'   },
   '안전':      { new:'현장안전점검', mod:'안전용품' },
@@ -1337,7 +1341,8 @@ let cats = DEFAULT_CATS_BY_MENU[activeMenu].slice();
 
 const WT_META  = {
   '신규':          { icon:'🆕', ptCls:'pt-new',  bCls:'b-wt-new'  },
-  '진행중':        { icon:'🚧', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '진행':          { icon:'🚧', ptCls:'pt-new',  bCls:'b-wt-new'  },
+  '진행중':        { icon:'🚧', ptCls:'pt-new',  bCls:'b-wt-new'  },  // 옛 표기 호환(읽기 전용)
   '완료':          { icon:'✅', ptCls:'pt-post', bCls:'b-wt-post' },
   '변경전':        { icon:'📷', ptCls:'pt-pre',  bCls:'b-wt-pre'  },
   '변경후':        { icon:'✅', ptCls:'pt-post', bCls:'b-wt-post' },
@@ -2377,7 +2382,7 @@ function parseOCRText(text) {
   if(/변경\s*후/.test(t)) r.wt='변경후';
   else if(/변경\s*전/.test(t)) r.wt='변경전';
   else if(/완료/.test(t)) r.wt='완료';
-  else if(/진행\s*중/.test(t)) r.wt='진행중';
+  else if(/진행/.test(t)) r.wt='진행';   // 옛 워터마크의 "진행중"도 이 한 줄로 같이 잡힌다
   // 아래 두 줄은 예전 방식(수정-작업전/후)으로 이미 찍힌 워터마크와의 호환용
   else if(/수정.{0,2}작업.{0,2}후/.test(t)) r.wt='수정-작업후';
   else if(/수정.{0,2}작업.{0,2}전/.test(t)) r.wt='수정-작업전';
@@ -2679,7 +2684,7 @@ function wtFromMeta(meta){
 
 // work-shoot의 WT_EN과 동일 — 작업구분 라벨(한글)은 sanitizeForFilename이 통째로 지워버리므로
 // (비ASCII 문자 제거 규칙 때문에) 파일명용 영문 코드로 먼저 바꿔줘야 한다.
-const WT_EN={'신규':'new','진행중':'in-progress','완료':'done','변경전':'mod-before','변경후':'mod-after','도급':'contract','사급':'owner-supply','현장안전점검':'safety-check','안전용품':'safety-gear','화기감시자':'fire-watch','유도원':'guide'};
+const WT_EN={'신규':'new','진행':'in-progress','진행중':'in-progress','완료':'done','변경전':'mod-before','변경후':'mod-after','도급':'contract','사급':'owner-supply','현장안전점검':'safety-check','안전용품':'safety-gear','화기감시자':'fire-watch','유도원':'guide'};
 
 // work-shoot buildFileName()과 동일한 규칙으로 파일명을 만든다 — 이렇게 올라간 사진도
 // 나중에 기기번호/작업분류 수정 시 파일명 동기화(syncEditToCloud)가 정상 동작하도록 하기 위함.
