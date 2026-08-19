@@ -829,22 +829,25 @@ async function syncFromSupabase(filters){
     const recordsByUrl={};
     records.forEach(r=>{ if(r.photo_url) recordsByUrl[r.photo_url]=r; });
 
-    // 이미 로컬에 있는 사진: 팀명(sender) 비어있는 경우 보정 + cloud_id 없으면 채워넣기 +
-    // 클라우드에서 파일명/URL이 바뀐 경우 로컬 쪽도 새 URL로 갱신(끊긴 이미지 링크 방지)
+    // 이미 로컬에 있는 사진도 클라우드 값 기준으로 맞춘다 — 다른 사람이 gallery에서 정보를
+    // 수정하면(syncEditToCloud) 그 수정 내용이 여기로 반영되어야 "모두에게 반영"이 완성된다.
+    // 예전엔 로컬 값이 비어있을 때만 채워서, 이미 값이 있으면(수정 전 값이어도) 재동기화해도
+    // 안 바뀌는 문제가 있었다 — 클라우드가 다르면 데이터 필드는 무조건 덮어쓴다.
     let backfilled=0;
+    const FIELD_MAP=[['date','date'],['time','time'],['tag','tag'],['cat','cat'],['area','loc'],['wt','work_type'],['note','note']];
     for(const p of photos){
       if(!p.cloud_url) continue;
       const rec = (p.cloud_id!=null ? recordsById[p.cloud_id] : null) || recordsByUrl[p.cloud_url];
       if(!rec) continue;
       let changed=false;
-      if(rec.sender && !p.team){ p.team=rec.sender; changed=true; }
-      // area(작업구역)도 team과 마찬가지로 이 기기 로컬엔 비어있는데 클라우드엔 값이 있는 경우가
-      // 있을 수 있다(다른 기기/세션에서 채워짐 등). 비어두면 이후 자동전환·재동기화 시
-      // syncEditToCloud가 전체 필드를 덮어쓰면서 클라우드의 값까지 빈 값으로 지워버리므로 보정한다.
-      if(rec.loc && !p.area){ p.area=rec.loc; changed=true; }
+      // 클라우드 값이 실제로 있을 때만 덮어쓴다 — 자동분류(OCR) 등으로 로컬에 먼저
+      // 채워졌지만 아직 클라우드로 못 올라간 값을 빈 클라우드 값으로 지워버리는 걸 방지.
+      FIELD_MAP.forEach(([localKey,cloudKey])=>{
+        const cv=rec[cloudKey];
+        if(cv && cv!==p[localKey]){ p[localKey]=cv; changed=true; }
+      });
+      if(rec.sender && rec.sender!==p.team){ p.team=rec.sender; changed=true; }
       if(!p.menu){ p.menu=rec.menu||'시공'; changed=true; }
-      // 작업분류가 아직 없으면(자동 분류 전) Others로 채워서 사이드바 어딘가에는 항상 보이게 한다
-      if(!p.cat){ p.cat=rec.cat||'OTHERS'; changed=true; }
       if(p.cloud_id==null && rec.id!=null){ p.cloud_id=rec.id; changed=true; }
       if(rec.photo_url && rec.photo_url!==p.cloud_url){
         p.cloud_url=rec.photo_url;
