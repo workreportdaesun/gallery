@@ -56,8 +56,8 @@ body { font-family: 'Malgun Gothic', 'Segoe UI', sans-serif; background: var(--b
 .menu-tab[data-menu="품질"] { border-color: rgba(39,174,96,.45); color: #58D68D; }
 .menu-tab[data-menu="화기/유도"] { border-color: rgba(192,57,43,.45); color: #EC7063; }
 .menu-tab.active[data-menu="자재"] { background: #A0703A; border-color: #A0703A; color: #fff; }
-.menu-tab.active[data-menu="안전"] { background: #F39C12; border-color: #F39C12; color: #fff; }
-.menu-tab.active[data-menu="품질"] { background: #27AE60; border-color: #27AE60; color: #fff; }
+.menu-tab.active[data-menu="안전"] { background: #F39C12; border-color: #F39C12; color:#1A2332; }
+.menu-tab.active[data-menu="품질"] { background: #1B7A43; border-color: #1B7A43; color: #fff; }
 .menu-tab.active[data-menu="화기/유도"] { background: #C0392B; border-color: #C0392B; color: #fff; }
 
 /* 레이아웃 */
@@ -643,6 +643,11 @@ html.view-only .adm-only { display: none !important; }
     </div>
     <div class="fg" style="margin-bottom:12px;">
       <label>기간</label>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="setSyncPeriodPreset(7)">최근 7일</button>
+        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="setSyncPeriodPreset(30)">최근 30일</button>
+        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="setSyncPeriodPreset(90)">최근 90일</button>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="date" id="syncFromDate" style="flex:1;">
         <span>~</span>
@@ -779,6 +784,11 @@ function openSyncFilter(){
 function closeSyncFilter(){
   document.getElementById('syncFilterOverlay').classList.remove('show');
 }
+function setSyncPeriodPreset(days){
+  const d=new Date(); d.setDate(d.getDate()-days);
+  document.getElementById('syncFromDate').value=d.toISOString().slice(0,10);
+  document.getElementById('syncToDate').value='';
+}
 function startFilteredSync(){
   const fromDate=document.getElementById('syncFromDate').value;
   const toDate=document.getElementById('syncToDate').value;
@@ -863,10 +873,16 @@ async function syncFromSupabase(filters){
       return;
     }
 
+    // 한 번에 너무 많이 받으면(수백~수천 장) 다운로드/저장 부담이 커지므로 배치로 나눠 받는다.
+    // 선택 동기화로 범위를 좁혀도 그 범위가 넓을 수 있어 안전장치로 남겨둔다.
+    const BATCH_LIMIT=200;
+    const recsToProcess=newRecs.slice(0,BATCH_LIMIT);
+    const remaining=newRecs.length-recsToProcess.length;
+
     let saved=0;
-    for(let i=0;i<newRecs.length;i++){
-      const rec=newRecs[i];
-      btn.textContent='⏳ '+(i+1)+'/'+newRecs.length+'장 다운로드...';
+    for(let i=0;i<recsToProcess.length;i++){
+      const rec=recsToProcess[i];
+      btn.textContent='⏳ '+(i+1)+'/'+recsToProcess.length+'장 다운로드...';
       try{
         const resp=await fetch(rec.photo_url);
         if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -899,6 +915,7 @@ async function syncFromSupabase(filters){
     if (backfilled>0) msg += `\n👤 팀명 ${backfilled}장 보정 완료`;
     if (newTeams>0) msg += `\n👥 새 팀명 ${newTeams}개 자동 등록`;
     if (dirHandle) msg += '\n💾 검토·수정이 끝나면 설정 화면에서 "PC 폴더에 저장"을 눌러주세요.';
+    if (remaining>0) msg += `\n📥 ${remaining}장 더 남았습니다 — 동기화를 다시 눌러 이어받아 주세요.`;
     alert(msg);
   }catch(e){
     console.error('동기화 오류:',e);
@@ -1223,8 +1240,9 @@ async function loadFromFolder() {
       } else if (WT_FOLDER_NAMES.has(name)) {
         // 예전 구조: 메뉴 > 작업구분 > 작업분류 > 파일
         await scanOldWtThenCat(handle, name, menu);
-      } else {
+      } else if (name === 'OTHERS' || cats.some(c => c.toLowerCase() === name.toLowerCase())) {
         // 더 예전 구조: 메뉴 > 작업분류 > 파일
+        // (알려진 작업분류 이름일 때만 처리 — 아니면 무관한 폴더가 섞여 들어올 수 있어 건너뜀)
         const cat = (name === 'OTHERS') ? '' : name;
         await scanWtLevel(handle, cat, menu, '');
       }
@@ -1238,8 +1256,10 @@ async function loadFromFolder() {
       } else if (handle.kind === 'directory' && WT_FOLDER_NAMES.has(name)) {
         // 메뉴 폴더조차 없던 아주 예전 구조: 작업구분 > 작업분류 > 파일
         await scanOldWtThenCat(handle, name, '');
-      } else if (handle.kind === 'directory') {
+      } else if (handle.kind === 'directory' && (name === 'OTHERS' || cats.some(c => c.toLowerCase() === name.toLowerCase()))) {
         // 가장 예전 구조: 작업분류 폴더만
+        // (알려진 작업분류 이름일 때만 처리 — 엉뚱한 폴더를 선택했을 때 그 안의
+        // 무관한 하위폴더/사진까지 전부 끌려 들어오는 걸 막기 위한 안전장치)
         const cat = (name === 'OTHERS') ? '' : name;
         for await (const [subName, subHandle] of handle.entries()) {
           if (subHandle.kind !== 'file') continue;
