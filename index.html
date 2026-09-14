@@ -1724,13 +1724,36 @@ async function fetchSettingsFromSupabase(){
     const {data,error}=await sbClient.from('app_settings').select('*').eq('id','global').single();
     if(error||!data)return;
     applyRemoteSettings(data);
+    lastCatStructKey=catStructKeyOf(data);
   }catch(e){console.error('설정 클라우드 불러오기 실패',e);}
+}
+/* 다른 앱(report/material/shoot 등)과 같은 문구·같은 판단 기준으로 "설정이 바뀌었다" 알림을
+   띄운다. gallery에는 원래 토스트 UI가 없어서 여기서만 쓰는 가벼운 팝업을 새로 만든다
+   (CSS를 따로 안 건드리려고 인라인 스타일로 처리, 2026-09-14). */
+var lastCatStructKey='';
+function catStructKeyOf(o){ return JSON.stringify([o.cats_by_menu||{}, o.areas||[], o.teams||[]]); }
+function showAppToast(msg){
+  var t=document.getElementById('appToast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='appToast';
+    t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1A2332;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:calc(100vw - 32px);text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;
+  t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){ t.style.opacity='0'; },2400);
 }
 function subscribeSettingsRealtime(){
   if(!sbClient||!sbClient.channel)return;
   sbClient.channel('app_settings_changes_gallery')
     .on('postgres_changes',{event:'*',schema:'public',table:'app_settings',filter:'id=eq.global'},payload=>{
-      if(payload.new) applyRemoteSettings(payload.new);
+      if(!payload.new) return;
+      applyRemoteSettings(payload.new);
+      var k=catStructKeyOf(payload.new);
+      if(lastCatStructKey && k!==lastCatStructKey) showAppToast('⚙️ 설정이 업데이트되어 반영되었습니다');
+      lastCatStructKey=k;
     })
     .subscribe();
 }
